@@ -1,0 +1,17 @@
+{
+  "name": "dhbw/blog",
+  "type": "project",
+  "require": {
+    "php": "^8.1",
+    "phpmailer/phpmailer": "^6.9"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\OOP\\": "app/OOP/"
+    }
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "sort-packages": true
+  }
+}
