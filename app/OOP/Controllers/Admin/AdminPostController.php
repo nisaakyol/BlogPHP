@@ -8,17 +8,19 @@ use App\OOP\Repositories\DbRepository;
 /**
  * AdminPostController
  *
- * Zuständig für:
- * - Listenansicht (index)
- * - Löschen (delete)
- * - Publish/Unpublish (togglePublish)
- * - Erstellen (handleCreate)
- * - Bearbeiten (handleEdit)
+ * Verantwortlich für:
+ * - index()         : Listenansicht
+ * - delete()        : Löschen eines Posts
+ * - togglePublish() : Publish/Unpublish umschalten
+ * - handleCreate()  : Anlegen eines neuen Posts (GET + POST)
+ * - handleEdit()    : Bearbeiten eines bestehenden Posts (GET + POST)
  *
- * Hinweise:
- * - Validierung erfolgt über die Helper (validatePost.php).
- * - Bild-Uploads werden in /assets/images/ abgelegt.
- * - Nach write-Aktionen wird per Header-Redirect zur Übersicht navigiert.
+ * Architekturhinweise:
+ * - Validierung erfolgt über den Helper app/helpers/validatePost.php (Wrapper um OOP\ValidationService).
+ * - Bild-Uploads landen in /assets/images/ (unterhalb ROOT_PATH).
+ * - PRG-Pattern: Nach erfolgreichen Schreiboperationen Redirect zurück zur Übersicht.
+ * - Diese Datei wurde angepasst, damit validatePost($post, $files) aufgerufen wird
+ *   (vorher wurde nur $post übergeben → Upload wurde nicht gesehen).
  */
 class AdminPostController
 {
@@ -29,9 +31,9 @@ class AdminPostController
     /* ---------- INDEX ---------- */
 
     /**
-     * Liefert Posts (absteigend nach created_at) und eine User-Map (id => username)
+     * Liefert Posts (absteigend nach created_at) und eine User-Map (id => username).
      *
-     * @return array{posts: array, usersById: array<int, string>}
+     * @return array{posts: array<int, array>, usersById: array<int, string>}
      */
     public function index(): array
     {
@@ -41,7 +43,7 @@ class AdminPostController
         $users     = $this->db->selectAll('users', [], 'id ASC');
         $usersById = [];
         foreach ($users as $u) {
-            $usersById[(int) $u['id']] = (string) $u['username'];
+            $usersById[(int)$u['id']] = (string)$u['username'];
         }
 
         return compact('posts', 'usersById');
@@ -83,21 +85,23 @@ class AdminPostController
 
     /**
      * Handhabt das Erstellen eines neuen Posts.
-     * - GET: liefert Defaults + Topics
-     * - POST (name="add-post"): validiert, lädt ggf. Bild hoch und speichert
+     * - GET  : liefert Defaults + Topics
+     * - POST : validiert, lädt ggf. Bild hoch und speichert anschließend
      *
-     * @param array $post  typ. $_POST
-     * @param array $files typ. $_FILES
+     * @param array $post  typischerweise $_POST
+     * @param array $files typischerweise $_FILES
      *
      * @return array ViewModel für die Formular-View
      */
     public function handleCreate(array $post, array $files): array
     {
+        // Validierungs-Wrapper laden (delegiert an ValidationService::post() falls vorhanden)
         require_once ROOT_PATH . '/app/helpers/validatePost.php';
 
+        // Topics für das <select>
         $topics = $this->db->selectAll('topics', [], 'name ASC');
 
-        // Defaults für Formular
+        // Default-ViewModel (für initialen GET-Aufruf)
         $vm = [
             'errors'    => [],
             'title'     => '',
@@ -112,11 +116,15 @@ class AdminPostController
             return $vm;
         }
 
-        // Validierung
-        $errors    = validatePost($post);
-        $imageName = $this->uploadImage($files['image'] ?? null, $errors);
+        // --- Validierung ---
+        // WICHTIG: $files mitgeben, damit die Validierung (bzw. der Service) Upload-Kontext sieht
+        $errors    = validatePost($post, $files);
 
-        // Fehler → Formular mit alten Werten wieder befüllen
+        // --- Datei-Upload ---
+        // Upload-Fehler werden in $errors ergänzt; required=true (bei Create Pflichtbild)
+        $imageName = $this->uploadImage($files['image'] ?? null, $errors, true);
+
+        // Bei Fehlern: Formular mit alten Werten erneut rendern
         if ($errors) {
             return [
                 'errors'    => $errors,
@@ -128,12 +136,12 @@ class AdminPostController
             ];
         }
 
-        // Persistenzdaten
+        // --- Persistenzdaten vorbereiten ---
         $data = [
             'title'    => $post['title'],
-            'body'     => htmlentities($post['body']), // Legacy: HTML speichern als Entities
-            'topic_id' => (int) $post['topic_id'],
-            'user_id'  => (int) $_SESSION['id'],
+            'body'     => htmlentities($post['body']), // Legacy: HTML als Entities speichern
+            'topic_id' => (int)$post['topic_id'],
+            'user_id'  => (int)$_SESSION['id'],
             'image'    => $imageName,
         ];
 
@@ -164,9 +172,9 @@ class AdminPostController
      * - GET ?id=…   : lädt Post und Topics für das Formular
      * - POST update : validiert, optional Bild hochladen/ersetzen, speichert
      *
-     * @param array $get   typ. $_GET
-     * @param array $post  typ. $_POST
-     * @param array $files typ. $_FILES
+     * @param array $get   typischerweise $_GET
+     * @param array $post  typischerweise $_POST
+     * @param array $files typischerweise $_FILES
      *
      * @return array ViewModel für die Formular-View
      */
@@ -178,7 +186,7 @@ class AdminPostController
 
         // GET ?id => Formular mit Daten befüllen
         if (isset($get['id'])) {
-            $p = $this->db->selectOne('posts', ['id' => (int) $get['id']]);
+            $p = $this->db->selectOne('posts', ['id' => (int)$get['id']]);
 
             return [
                 'errors'    => [],
@@ -186,7 +194,7 @@ class AdminPostController
                 'title'     => $p['title'],
                 'body'      => $p['body'],
                 'topic_id'  => $p['topic_id'],
-                'published' => (int) $p['published'],
+                'published' => (int)$p['published'],
                 'topics'    => $topics,
             ];
         }
@@ -204,15 +212,18 @@ class AdminPostController
             ];
         }
 
-        // Validierung
-        $errors    = validatePost($post);
-        $imageName = $this->uploadImage($files['image'] ?? null, $errors, false); // Bild optional
+        // --- Validierung ---
+        // $files mitgeben (auch wenn Bild optional ist)
+        $errors    = validatePost($post, $files);
+
+        // --- Datei-Upload (optional) ---
+        $imageName = $this->uploadImage($files['image'] ?? null, $errors, false); // required=false
 
         // Fehler → Formular mit alten Werten wieder befüllen
         if ($errors) {
             return [
                 'errors'    => $errors,
-                'id'        => (int) ($post['id'] ?? 0),
+                'id'        => (int)($post['id'] ?? 0),
                 'title'     => $post['title']     ?? '',
                 'body'      => $post['body']      ?? '',
                 'topic_id'  => $post['topic_id']  ?? '',
@@ -221,13 +232,14 @@ class AdminPostController
             ];
         }
 
-        $id = (int) $post['id'];
+        $id = (int)$post['id'];
 
+        // --- Persistenzdaten vorbereiten ---
         $data = [
             'title'     => $post['title'],
-            'body'      => htmlentities($post['body']), // Legacy: HTML speichern als Entities
-            'topic_id'  => (int) $post['topic_id'],
-            'user_id'   => (int) $_SESSION['id'],
+            'body'      => htmlentities($post['body']), // Legacy: HTML als Entities speichern
+            'topic_id'  => (int)$post['topic_id'],
+            'user_id'   => (int)$_SESSION['id'],
             'published' => !empty($post['published']) ? 1 : 0,
         ];
 
@@ -251,13 +263,14 @@ class AdminPostController
      * Bild-Upload.
      *
      * @param array|null $file     $_FILES['image']-Struktur oder null
-     * @param array      $errors   Referenz auf Fehlerliste (wird befüllt)
-     * @param bool       $required true = Bild ist Pflicht, false = optional
+     * @param array      $errors   Referenz auf Fehlerliste (wird ergänzt)
+     * @param bool       $required true = Bild ist Pflicht (Create), false = optional (Edit)
      *
      * @return string|null  Dateiname bei Erfolg, sonst null
      */
     private function uploadImage(?array $file, array &$errors, bool $required = true): ?string
     {
+        // Kein Feld/keine Auswahl
         if (!$file || empty($file['name'])) {
             if ($required) {
                 $errors[] = 'Post image required';
@@ -269,7 +282,8 @@ class AdminPostController
         $imageName = time() . '_' . basename($file['name']);
         $dest      = ROOT_PATH . '/assets/images/' . $imageName;
 
-        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+        // Physisch verschieben; schlägt dies fehl, Fehler melden
+        if (!@move_uploaded_file($file['tmp_name'] ?? '', $dest)) {
             $errors[] = 'Failed to upload image';
             return null;
         }

@@ -30,6 +30,18 @@ class DbRepository
      * @param array  $data  Assoziatives oder numerisches Array der Parameterwerte
      * @return mysqli_stmt
      */
+    // App\OOP\Repositories\DbRepository
+    public function createComment(array $data): int
+    {
+        // schreibt in Spalte `comment` (nicht `body`)
+        return $this->create('comments', [
+            'post_id'   => (string)(int)$data['post_id'],
+            'parent_id' => ($data['parent_id'] === '' ? null : (string)(int)$data['parent_id']),
+            'username'  => (string)$data['username'],
+            'comment'   => (string)$data['comment'], // <— wichtig
+        ]);
+    }
+
     public function executeQuery(string $sql, array $data): mysqli_stmt
     {
         $conn = LegacyDB::conn();

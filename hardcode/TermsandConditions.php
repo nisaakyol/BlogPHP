@@ -1,41 +1,43 @@
-<?php require("../path.php") ?>
+<?php require("../path.php") ?> <!-- Lädt zentrale Pfad-/URL-Konstanten (ROOT_PATH, BASE_URL) -->
 
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta charset="UTF-8"> <!-- Basis-Encoding -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive Meta -->
+  <meta http-equiv="X-UA-Compatible" content="ie=edge"> <!-- IE-Kompatibilität -->
 
-  <!-- Font Awesome -->
+  <!-- Externe Icon-Bibliothek -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
     integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
-  <!-- Google Fonts -->
+  <!-- Google Webfonts -->
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
 
-  <!-- CSS Styling -->
+  <!-- Projekt-Styles -->
   <link rel="stylesheet" href="../assets/css/style.css">
 
-  <title>Terms and Conditions</title>
+  <title>Terms and Conditions</title> <!-- Seitentitel -->
 </head>
 
 
-<!-- Navigationsleiste für Blog Eintrag aus header-->
+<!-- Globale Navigationsleiste -->
 <?php include(ROOT_PATH . "/app/includes/header.php"); ?>
 
-<!-- Page Wrapper -->
+<!-- Seiten-Wrapper -->
 <div class="page-wrapper">
 
-  <div class="content clearfix"></div>
+  <div class="content clearfix"></div> <!-- Layout-Helfer -->
 
   <div class="main-content-wrapper">
 
+    <!-- Titel -->
     <div style="text-align: center;">
       <h1 class="post-title">Terms and Conditions</h1>
     </div>
 
+    <!-- Einleitender Hinweis / Aktualisierungsdatum -->
     <div style="margin-left: 35px; text-align: center;">
 
       <!-- <p><strong>Terms and Conditions</strong></p> -->
@@ -43,6 +45,8 @@
       aktualisiert. Bitte lesen Sie diese Bedingungen und Konditionen sorgfältig durch, bevor Sie unseren Service
       nutzen.</p>
     </div>
+
+    <!-- Abschnitte: Danksagung / Geltungsbereich -->
     <div style="margin-left: 35px; margin-right: 45px;">
 
       <p><strong>Danksagung</strong></p>
@@ -65,6 +69,7 @@
       </p>
     </div>
 
+    <!-- Abschnitt: Benutzerkonten -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px;">
       <p><strong>Benutzerkonten</strong></p>
       <p>Wenn Sie ein Konto bei uns erstellen, müssen Sie uns Informationen zur Verfügung stellen, die jederzeit
@@ -82,6 +87,7 @@
         obszön ist.</p>
     </div>
 
+    <!-- Abschnitt: Inhalte / Rechte -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px;">
       <p><strong>Inhalt</strong></p>
       <p><strong>Ihr Recht, Inhalte zu veröffentlichen</strong></p>
@@ -101,6 +107,7 @@
         Veröffentlichungsrechte, Urheberrechte, Vertragsrechte oder andere Rechte einer Person verletzt.</p>
     </div>
 
+    <!-- Abschnitt: Inhaltliche Beschränkungen + Liste -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px;">
       <p><strong>Inhaltliche Beschränkungen</strong></p>
       <p>Das Unternehmen ist nicht verantwortlich für die Inhalte der Nutzer des Dienstes. Sie verstehen
@@ -112,6 +119,7 @@
         Inhalte sind unter anderem die folgenden:</p>
     </div>
 
+    <!-- Aufzählung unzulässiger Inhalte -->
     <div style="margin-left: 50px; margin-right: 45px;">
       <ul>
         <li> Rechtswidrig oder Förderung rechtswidriger Handlungen.</li>
@@ -134,6 +142,8 @@
         <li>Falsche Informationen und Merkmale.</li>
       </ul>
     </div>
+
+    <!-- Hinweis zu Moderation / Risiken -->
     <div style="margin-left: 35px; margin-right: 45px;">
       <p>Das Unternehmen behält sich das Recht, aber nicht die Pflicht vor, nach eigenem Ermessen zu
         entscheiden, ob ein Inhalt angemessen ist und mit diesen Bedingungen übereinstimmt, diesen Inhalt
@@ -149,6 +159,7 @@
         Nutzung von Inhalten entstehen.</p>
     </div>
 
+    <!-- Abschnitt: Backups -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Backups von Inhalten</strong></p>
       <p>Obwohl regelmäßig Sicherungskopien der Inhalte erstellt werden, kann das Unternehmen nicht
@@ -163,6 +174,7 @@
         Ort aufzubewahren.</p>
     </div>
 
+    <!-- Abschnitt: Urheberrecht / DMCA-Flow -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Urheberrechtspolitik</strong></p>
       <p><strong>Verletzung von Rechten an geistigem Eigentum</strong></p>
@@ -181,6 +193,8 @@
       <p>Sie können eine Benachrichtigung einreichen, indem
         Sie unserem Urheberrechtsbeauftragten die folgenden Informationen schriftlich zukommen lassen: </p>
     </div>
+
+    <!-- DMCA-Informationsliste -->
     <div style="margin-left: 45px; margin-right: 45px;">
       <ul>
         <li>Eine elektronische oder physische Unterschrift der Person, die befugt ist, im Namen des
@@ -198,6 +212,8 @@
           des Urheberrechtsinhabers zu handeln.</li>
       </ul>
     </div>
+
+    <!-- Kontaktangabe für Urheberrechtsbeauftragten -->
     <div style="margin-left: 35px; margin-right: 45px;">
       <p>Sie können unseren Urheberrechtsbeauftragten per E-Mail ([COPYRIGHT_AGENT_CONTACT_EMAIL])
         kontaktieren. Nach Erhalt einer Benachrichtigung ergreift das Unternehmen alle Maßnahmen, die es nach
@@ -205,6 +221,7 @@
         dem Dienst.</p>
     </div>
 
+    <!-- Abschnitt: Geistiges Eigentum -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Geistiges Eigentum</strong></p>
       <p>Der Dienst und seine ursprünglichen Inhalte (mit Ausnahme der von Ihnen oder anderen Nutzern
@@ -216,6 +233,7 @@
         Unternehmens nicht in Verbindung mit einem Produkt oder einer Dienstleistung verwendet werden.</p>
     </div>
 
+    <!-- Abschnitt: Feedback-Lizenz -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Ihr Feedback an uns</strong></p>
       <p>Sie treten alle Rechte, Titel und Interessen an allen Rückmeldungen ab, die Sie dem Unternehmen zur
@@ -225,6 +243,7 @@
         Offenlegung, Unterlizenzierung, Verteilung, Änderung und Verwertung dieses Feedbacks zu gewähren.</p>
     </div>
 
+    <!-- Abschnitt: Externe Links -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Links zu anderen Websites</strong></p>
       <p>Unser Service kann Links zu Websites oder Diensten Dritter enthalten, die sich nicht im Besitz oder unter
@@ -239,6 +258,7 @@
         Diensten Dritter, die Sie besuchen, zu lesen.</p>
     </div>
 
+    <!-- Abschnitt: Kündigung -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Terminierung</strong></p>
       <p>Wir können Ihr Konto sofort und ohne vorherige Ankündigung oder Haftung kündigen oder aussetzen, aus
@@ -248,6 +268,7 @@
         möchten, können Sie die Nutzung des Dienstes einfach einstellen.</p>
     </div>
 
+    <!-- Abschnitt: Geltendes Recht -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Geltendes Recht</strong></p>
       <p>Für diese Bedingungen und Ihre Nutzung des Dienstes gelten die Gesetze des Landes unter Ausschluss der
@@ -255,6 +276,7 @@
         internationalen Gesetzen unterliegen.</p>
     </div>
 
+    <!-- Abschnitt: Salvatorische Klausel -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Trennbarkeit und Verzicht</strong></p>
       <p>Sollte eine Bestimmung dieser Bedingungen für nicht durchsetzbar oder ungültig befunden werden, wird
@@ -263,6 +285,7 @@
         in Kraft und wirksam.</p>
     </div>
 
+    <!-- Abschnitt: Verzicht -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Verzicht</strong></p>
       <p>Sofern nicht anders angegeben, hat das Versäumnis, ein Recht auszuüben oder die Erfüllung einer
@@ -271,6 +294,7 @@
         stellt der Verzicht auf einen Verstoß einen Verzicht auf einen späteren Verstoß dar.</p>
     </div>
 
+    <!-- Abschnitt: Änderungen der Bedingungen -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px">
       <p><strong>Änderungen an diesen Bedingungen und Konditionen</strong></p>
       <p>Wir behalten uns das Recht vor, diese Bedingungen jederzeit nach unserem alleinigen Ermessen zu ändern
@@ -283,10 +307,13 @@
         des Dienstes.</p>
     </div>
 
+    <!-- Abschnitt: Kontakt -->
     <div style="margin-left: 35px; margin-right: 45px; margin-top: 40px;">
       <p><strong>Kontakt</strong></p>
       <p>Wenn Sie Fragen zu diesen Allgemeinen Geschäftsbedingungen haben, können Sie uns kontaktieren:</p>
     </div>
+
+    <!-- Kontaktoptionen (Liste) -->
     <div style="margin-left: 50px; margin-right: 45px; margin-bottom: 50px;">
       <li>Indem Sie diese Seite auf unserer Website besuchen</li>
       <li>Senden Sie uns eine E-Mail: sammelstelledhbwblog@gmail.com</li>
@@ -294,19 +321,17 @@
       <p></p>
     </div>
 
-    <!-- Fußzeile aus includes footer mit GLobaler Variable um Sprung Fehler zu vermeiden -->
+    <!-- Globale Fußzeile -->
     <?php include(ROOT_PATH . "/app/includes/footer.php"); ?>
 
 
-    <!-- JQuery -->
+    <!-- jQuery (extern) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-    <!-- Slick Carousel -->
+    <!-- Slick Carousel (extern) -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
 
-    <!-- JS Script -->
+    <!-- Projektscript -->
     <script src="assets/js/scripts.js"></script>
 
-
-
-</html>
+</html> <!-- Dokumentende -->

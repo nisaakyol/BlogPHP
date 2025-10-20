@@ -3,58 +3,63 @@ declare(strict_types=1);
 
 namespace App\OOP\Controllers;
 
-use App\OOP\Repositories\CommentRepository;
+use App\OOP\Repositories\DbRepository;
 
-/**
- * Datei: App/OOP/Controllers/CommentController.php
- *
- * Zweck:
- * - Liest POST-Felder, prüft Pflichtfelder,
- *   legt Kommentar an (inkl. optionaler parent_id) und leitet zu single.php?id=... um.
- * - Fehlerfall: einfache Ausgabe per echo (kompatibel zum bisherigen Verhalten).
- */
-final class CommentController
+class CommentController
 {
-    /**
-     * Verarbeitet das Kommentarformular (nur bei POST).
-     * - Erwartet Felder: username, comment, post_id, optional parent_id
-     * - Bei Erfolg: Redirect auf single.php?id={post_id}
-     * - Bei Fehler: echo-Ausgabe (wie zuvor)
-     *
-     * @return void
-     */
-    public function createFromPost(): void
+    public function __construct(private DbRepository $db) {}
+
+    /** Speichert Kommentar + Redirect zurück auf den Post */
+    public function store(array $data): void
     {
-        // Nur POST verarbeiten; GET tut nichts (wie vorher)
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
-            return;
+        // Honeypot optional
+        if (!empty($data['honeypot'] ?? '')) {
+            header('Location: ' . BASE_URL . '/index.php'); exit;
         }
 
-        // Rohwerte aus $_POST (bewusst minimal transformiert; Validierung wie zuvor)
-        $username  = $_POST['username']  ?? '';
-        $comment   = $_POST['comment']   ?? '';
-        $parentRaw = $_POST['parent_id'] ?? null;
-        $postRaw   = $_POST['post_id']   ?? null;
+        $postId   = (int)($data['post_id']  ?? 0);
+        $parentId = trim((string)($data['parent_id'] ?? ''));
+        $username = trim((string)($data['username']  ?? ''));
+        $comment  = trim((string)($data['comment']   ?? ''));
 
-        // parent_id ist optional; leere Strings als null behandeln
-        $parentId = ($parentRaw === '' || $parentRaw === null) ? null : (int) $parentRaw;
-        $postId   = (int) $postRaw;
+        $errors = [];
+        if ($postId <= 0)     $errors[] = 'Ungültige Post-ID.';
+        if ($username === '') $errors[] = 'Bitte Benutzernamen eingeben.';
+        if ($comment === '')  $errors[] = 'Bitte Kommentartext eingeben.';
 
-        // Pflichtfelder prüfen (wie zuvor)
-        if ($username !== '' && $comment !== '') {
-            $ok = CommentRepository::create($username, $comment, $parentId, $postId);
+        if ($errors) {
+            if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+            $_SESSION['form_errors'] = $errors;
+            $_SESSION['form_old'] = [
+                'username'  => $username,
+                'comment'   => $comment,
+                'parent_id' => $parentId,
+            ];
+            header('Location: ' . BASE_URL . '/single.php?id=' . $postId . '#comments');
+            exit;
+        }
 
-            if ($ok) {
-                header('Location: single.php?id=' . $postId);
-                exit;
+        $this->db->createComment([
+            'post_id'   => $postId,
+            'parent_id' => $parentId, // '' oder ID
+            'username'  => $username,
+            'comment'   => $comment,
+        ]);
+
+        header('Location: ' . BASE_URL . '/single.php?id=' . $postId . '#comments');
+        exit;
+    }
+
+    /** Lädt Kommentare rekursiv (nutzt dein fetchCommentsForPost) */
+    public function treeForPost(int $postId): array
+    {
+        $build = function (?int $parentId) use (&$build, $postId): array {
+            $rows = $this->db->fetchCommentsForPost($postId, $parentId);
+            foreach ($rows as &$r) {
+                $r['children'] = $build((int)$r['id']);
             }
-
-            // Fehlerfall: identisch zum bisherigen Verhalten (schlichte Ausgabe)
-            echo 'Error: Insert failed.';
-            return;
-        }
-
-        // Pflichtfelder nicht vollständig: ebenfalls schlichte Ausgabe
-        echo 'Please fill in all fields.';
+            return $rows;
+        };
+        return $build(null);
     }
 }

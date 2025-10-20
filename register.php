@@ -1,41 +1,43 @@
 <?php
-/* Veränderungsdatum: 08.10.2024 
-   Register-Seite (OOP). Legt User via AuthController an.
+/* Register-Seite (OOP). Legt User via AuthController an.
    Fehler bleiben erhalten, Felder (außer Passwörter) werden vorbefüllt.
 */
-require 'path.php';
-require_once ROOT_PATH . '/app/OOP/bootstrap.php';
+require 'path.php';                                     // Projektpfade/URLs (ROOT_PATH, BASE_URL)
+require_once ROOT_PATH . '/app/OOP/bootstrap.php';      // Bootstrap/Autoloader der OOP-Schicht
 
-use App\OOP\Controllers\AuthController;
-use App\OOP\Repositories\DbRepository;
+use App\OOP\Controllers\AuthController;                 // Zuständig für Register-/Login-Flow
+use App\OOP\Repositories\DbRepository;                  // DB-Zugriffsschicht (per DI)
 
+// Controller mit Repository injizieren
 $auth = new AuthController(new DbRepository());
 
 // Submit?
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register-btn'])) {
-    $auth->handleRegister($_POST); // redirect oder setzt $_SESSION['form_errors'] / ['form_old']
+    // Übergibt Formdaten an den Controller:
+    // - Bei Erfolg: Redirect
+    // - Bei Fehler: setzt $_SESSION['form_errors'] und $_SESSION['form_old']
+    $auth->handleRegister($_POST);
 }
 
-// View-Daten laden + Session aufräumen
+// View-Daten laden + Session aufräumen (Flash-Pattern)
 $errors = $_SESSION['form_errors'] ?? [];
 $old    = $_SESSION['form_old'] ?? [];
-unset($_SESSION['form_errors'], $_SESSION['form_old']);
+unset($_SESSION['form_errors'], $_SESSION['form_old']); // nach Konsum entfernen
 
-// Legacy-Variablen, damit vorhandenes Markup unverändert bleiben kann
-$username      = $old['username']      ?? '';
-$email         = $old['email']         ?? '';
-$password      = ''; // niemals vorbefüllen
-$passwordConf  = '';
+// Sticky Values (niemals Passwörter vorbefüllen!)
+$username     = $old['username'] ?? '';
+$email        = $old['email']    ?? '';
+$password     = ''; // nie vorbefüllen
+$passwordConf = '';
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <meta charset="UTF-8">                                   <!-- Basis-Encoding -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Responsive -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">     <!-- IE-Kompatibilität -->
 
-  <!-- Font Awesome -->
+  <!-- Font Awesome (Icons) -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
         integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
 
@@ -47,57 +49,76 @@ $passwordConf  = '';
 
   <title>Register</title>
 </head>
-
 <body>
-  <!-- Header -->
+  <!-- Header + globale Hinweise/Messages -->
   <?php include(ROOT_PATH . "/app/includes/header.php"); ?>
   <?php include(ROOT_PATH . "/app/includes/messages.php"); ?>
 
   <div class="auth-content" style="max-width:520px;margin:40px auto;">
-    <form action="register.php" method="post">
+    <!-- Formular postet an dieselbe Seite; Controller verarbeitet oben -->
+    <form action="register.php" method="post" autocomplete="off">
       <h2 class="form-title">Register</h2>
 
-      <!-- Fehlerliste -->
+      <!-- Fehlerliste (nutzt $errors aus oben) -->
       <?php include(ROOT_PATH . "/app/helpers/formErrors.php"); ?>
 
-      <!-- Honeypot (unsichtbar für Menschen) -->
+      <!-- Honeypot (Bot-Schutz; für Nutzer unsichtbar) -->
       <input type="text" id="honeypot" name="honeypot" value="" style="position:absolute; left:-9999px;" autocomplete="off"/>
 
+      <!-- Username -->
       <div>
-        <label>Username</label>
-        <input type="text" name="username"
-               value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>"
-               class="text-input" autocomplete="username">
+        <label for="username">Username</label>
+        <input type="text"
+               id="username"
+               name="username"
+               class="text-input"
+               autocomplete="username"
+               value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>">
       </div>
 
+      <!-- Email -->
       <div>
-        <label>Email</label>
-        <input type="email" name="email"
-               value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
-               class="text-input" autocomplete="email">
+        <label for="email">Email</label>
+        <input type="email"
+               id="email"
+               name="email"
+               class="text-input"
+               autocomplete="email"
+               value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>">
       </div>
 
+      <!-- Password -->
       <div>
-        <label>Password</label>
-        <input type="password" name="password" class="text-input" autocomplete="new-password">
+        <label for="password">Password</label>
+        <input type="password"
+               id="password"
+               name="password"
+               class="text-input"
+               autocomplete="new-password">
       </div>
 
+      <!-- Password Confirmation -->
       <div>
-        <label>Password Confirmation</label>
-        <input type="password" name="passwordConf" class="text-input" autocomplete="new-password">
+        <label for="passwordConf">Password Confirmation</label>
+        <input type="password"
+               id="passwordConf"
+               name="passwordConf"
+               class="text-input"
+               autocomplete="new-password">
       </div>
 
       <div>
         <button type="submit" name="register-btn" class="btn btn-big">Register</button>
       </div>
+
       <p>Or <a href="<?php echo BASE_URL . '/login.php'; ?>">Login</a></p>
     </form>
   </div>
 
-  <?php include(ROOT_PATH . "/app/includes/footer.php"); ?>
+  <?php include(ROOT_PATH . "/app/includes/footer.php"); ?> <!-- Globale Fußzeile -->
 
   <!-- JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="assets/js/scripts.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script> <!-- jQuery -->
+  <script src="assets/js/scripts.js"></script> <!-- Projekt-Skripte -->
 </body>
 </html>

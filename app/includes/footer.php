@@ -4,9 +4,9 @@
  * Zweck: Globale Fußzeile mit Kurztext, Quick-Links und Kontaktformular
  *
  * Hinweise:
- * - Quick-Links: reine Navigationslinks (semantisch als Liste ausgezeichnet).
- * - Kontaktformular: sendet per POST an app/helpers/Contact.php (bestehender Handler).
- * - Für Produktion: Optional CSRF-Token ergänzen.
+ * - Quick-Links nutzen BASE_URL und zeigen auf einzelne Seiten (keine Duplikate).
+ * - Kontaktformular postet an app/helpers/Contact.php.
+ * - Für Produktion: CSRF-Token ergänzen.
  */
 ?>
 <footer class="footer" role="contentinfo">
@@ -16,8 +16,8 @@
       <h1 id="footer-about-heading" class="logo-text"><span>DH</span>BW Stuttgart</h1>
       <p>
         Die DHBW Stuttgart verfügt über 50 Jahre Erfahrung in qualitativ hochwertiger, dualer, praxisintegrierender
-        Hochschulausbildung. Die Studierenden wechseln regelmäßig zwischen der Hochschule und dem Partnerunternehmen.
-        So sammeln sie bereits während der Studienzeit wertvolle Berufserfahrung.
+        Hochschulausbildung. Die Studierenden wechseln regelmäßig zwischen der Hochschule und den Partnerunternehmen
+        und sammeln so bereits während der Studienzeit wertvolle Berufserfahrung.
       </p>
 
       <div class="contact">
@@ -37,10 +37,10 @@
     <nav class="footer-section links" aria-labelledby="footer-links-heading">
       <h2 id="footer-links-heading">Quick Links</h2>
       <ul>
-        <li><a href="#">Events</a></li>
+        <li><a href="<?php echo BASE_URL . '/hardcode/events.php'; ?>">Events</a></li>
         <li><a href="<?php echo BASE_URL . '/hardcode/team.php'; ?>">Team</a></li>
-        <li><a href="#">Mentores</a></li>
-        <li><a href="#">Gallery</a></li>
+        <li><a href="<?php echo BASE_URL . '/hardcode/mentores.php'; ?>">Mentores</a></li>
+        <li><a href="<?php echo BASE_URL . '/hardcode/gallery.php'; ?>">Gallery</a></li>
         <li><a href="<?php echo BASE_URL . '/hardcode/TermsandConditions.php'; ?>">Terms and Conditions</a></li>
       </ul>
     </nav>
@@ -50,7 +50,9 @@
       <h2 id="footer-contact-heading">Contact us</h2>
 
       <form action="<?php echo BASE_URL . '/app/helpers/Contact.php'; ?>" method="post" novalidate>
-        <!-- Optional (empfohlen): <input type="hidden" name="csrf_token" value="<?php /* echo $_SESSION['csrf_token'] ?? '' */ ?>"> -->
+        <!-- Optional/empfohlen:
+        <input type="hidden" name="csrf_token" value="<?php // echo $_SESSION['csrf_token'] ?? '' ?>">
+        -->
 
         <label for="email" class="sr-only">Your email address</label>
         <input
@@ -78,5 +80,9 @@
         </button>
       </form>
     </section>
+  </div>
+
+  <div class="footer-bottom">
+    &copy; <?php echo date('Y'); ?> DHBW Stuttgart
   </div>
 </footer>
