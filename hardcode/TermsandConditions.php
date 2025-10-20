@@ -1,9 +1,4 @@
-<!-- Veränderungsdatum: 08.10.2024 
-      Die Term and Condition Seite besteht nur aus Hardcode und gleicht dem den AGBS.   
--->
-
 <?php require("../path.php") ?>
-<?php require(ROOT_PATH . "/app/controllers/posts.php"); ?>
 
 <!DOCTYPE html>
 <html lang="en">

@@ -1,9 +1,4 @@
-<!-- Veränderungsdatum: 08.10.2024 
-      DIe Team Seite besteht nur aus Hardcode mit dem entsprechenden CSS Stil für die Bilder und den zugehörigen Text, um die "Entwickler" abzubilden.  
--->
-
 <?php require("../path.php") ?>
-<?php require(ROOT_PATH . "/app/controllers/posts.php"); ?>
 <!DOCTYPE html>
 <html lang="en">
 

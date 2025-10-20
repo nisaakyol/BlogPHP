@@ -1,105 +1,128 @@
 <?php
-require __DIR__ . '/../_admin_boot.php'; adminOnly();
+/**
+ * Datei: admin/users/index.php
+ * Zweck: Übersicht/Verwaltung der Benutzer (Listenansicht, Edit/Delete)
+ *
+ * Hinweise:
+ * - Delete wird aktuell per GET-Parameter ausgelöst (index.php?delete_id=...).
+ *   Für Produktion empfehlenswert: POST + CSRF-Token.
+ */
+
+require __DIR__ . '/../_admin_boot.php';
+adminOnly();
+
 require_once ROOT_PATH . '/app/OOP/bootstrap.php';
 
 use App\OOP\Controllers\Admin\AdminUserController;
 use App\OOP\Repositories\DbRepository;
 
+// Controller instanzieren
 $ctrl = new AdminUserController(new DbRepository());
 
-// Delete via GET wie früher
-if (isset($_GET['delete_id'])) { $ctrl->delete((int)$_GET['delete_id']); }
+// Delete via GET (bestehendes Verhalten beibehalten)
+if (isset($_GET['delete_id'])) {
+  $ctrl->delete((int) $_GET['delete_id']);
+}
 
-$vm = $ctrl->index();
-$admin_users = $vm['admin_users'];
+// ViewModel laden
+$vm          = $ctrl->index();
+$admin_users = $vm['admin_users'] ?? [];
 ?>
-
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <!-- Font Awesome -->
+  <link
+    rel="stylesheet"
+    href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+    crossorigin="anonymous"
+  />
 
-        <!-- Font Awesome -->
-        <link rel="stylesheet"
-            href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-            integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
-            crossorigin="anonymous">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet" />
 
-        <!-- Google Fonts -->
-        <link href="https://fonts.googleapis.com/css?family=Candal|Lora"
-            rel="stylesheet">
+  <!-- Basis-Styles -->
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <!-- Admin-Styles -->
+  <link rel="stylesheet" href="../../assets/css/admin.css" />
 
-        <!-- CSS Styling -->
-        <link rel="stylesheet" href="../../assets/css/style.css">
+  <title>Admin Section - Manage Users</title>
+</head>
+<body>
+  <!-- Admin-Header -->
+  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
 
-        <!-- Admin Styling -->
-        <link rel="stylesheet" href="../../assets/css/admin.css">
+  <!-- Seiten-Wrapper -->
+  <div class="admin-wrapper">
+    <!-- Linke Sidebar -->
+    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
 
-        <title>Admin Section - Manage Users</title>
-    </head>
+    <!-- Hauptinhalt -->
+    <div class="admin-content">
+      <!-- Schnellzugriff -->
+      <div class="button-group">
+        <a href="create.php" class="btn btn-big">Add User</a>
+        <a href="index.php"  class="btn btn-big">Manage Users</a>
+      </div>
 
-    <body>
-       <!-- Einfügen des Admin headers aus includes verzeichnis -->
-        <?php include(ROOT_PATH . "/app/includes/adminHeader.php"); ?>
+      <div class="content">
+        <h2 class="page-title">Manage Users</h2>
 
-        <!-- Admin Page Wrapper -->
-        <div class="admin-wrapper">
-           
-            <!-- Linke Sidebar mit den Verwaltungsoptionen aus include adminSidebar -->
-            <?php include(ROOT_PATH . "/app/includes/adminSidebar.php"); ?>
+        <!-- System-/Flash-Meldungen -->
+        <?php include ROOT_PATH . "/app/includes/messages.php"; ?>
 
-            <!-- Admin Content -->
-            <div class="admin-content">
-                <div class="button-group">
-                    <a href="create.php" class="btn btn-big">Add User</a>
-                    <a href="index.php" class="btn btn-big">Manage Users</a>
-                </div>
+        <!-- Benutzer-Tabelle -->
+        <table>
+          <thead>
+            <tr>
+              <th>SN</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th colspan="2">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($admin_users as $idx => $user): ?>
+              <?php
+                $uid      = (int)   ($user['id']       ?? 0);
+                $uname    = (string)($user['username'] ?? '');
+                $uemail   = (string)($user['email']    ?? '');
+              ?>
+              <tr>
+                <!-- Laufnummer (1-basiert) -->
+                <td><?php echo $idx + 1; ?></td>
 
-                <div class="content">
+                <!-- Username -->
+                <td><?php echo htmlspecialchars($uname, ENT_QUOTES, 'UTF-8'); ?></td>
 
-                    <h2 class="page-title">Manage Users</h2>
-                    
-                    <!-- Alle Success/Error Messages werden angezeigt -->
-                    <?php include(ROOT_PATH . "/app/includes/messages.php"); ?>
+                <!-- E-Mail -->
+                <td><?php echo htmlspecialchars($uemail, ENT_QUOTES, 'UTF-8'); ?></td>
 
-                    <table>
-                        <thead>
-                            <th>SN</th>
-                            <th>Username</th>
-                            <th>Email</th>
-                            <th colspan="2">Action</th>
-                        </thead>
-                        <tbody>
-                            <!-- Für jeden User die es in der Datenbank gibt-->
-                            <?php foreach ($admin_users as $key => $user): ?>
-                                <!-- liste deren username und email. Gebe für jeden auch die Verwaltungsoption ein Benutzer zu Löschen oder verändern -->
-                                <tr>
-                                    <td><?php echo $key + 1; ?></td>
-                                    <td><?php echo $user['username']; ?></td>
-                                    <td><?php echo $user['email']; ?></td>
-                                    <td><a href="edit.php?id=<?php echo $user['id']; ?>" class="edit">edit</a></td>
-                                    <td><a href="index.php?delete_id=<?php echo $user['id']; ?>" class="delete">delete</a></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+                <!-- Aktionen: Edit/Delete -->
+                <td>
+                  <a href="edit.php?id=<?php echo $uid; ?>" class="edit">edit</a>
+                </td>
+                <td>
+                  <a href="index.php?delete_id=<?php echo $uid; ?>" class="delete">delete</a>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div><!-- /.content -->
+    </div><!-- /.admin-content -->
+  </div><!-- /.admin-wrapper -->
 
-        <!-- JQuery -->
-        <script
-            src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-        <!-- Ckeditor -->
-        <script
-            src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
-        <!-- JS Skript -->
-        <script src="../../assets/js/scripts.js"></script>
-
-    </body>
-
+  <!-- Vendor-Skripte -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- CKEditor (hier meist nicht benötigt) -->
+  <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
+  <!-- Projekt-JS -->
+  <script src="../../assets/js/scripts.js"></script>
+</body>
 </html>
