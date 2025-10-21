@@ -75,4 +75,42 @@ header {
   form div {
     margin-bottom: 15px;
   }
-  
+/* === Admin Action Buttons (compact) === */
+.btn {
+  --btn-bg: #334155;           /* slate-700 */
+  --btn-fg: #e5e7eb;           /* gray-200 */
+  --btn-bd: rgba(255,255,255,.08);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5ch;
+
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border: 1px solid var(--btn-bd);
+  border-radius: 10px;
+
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+
+  transition: filter .16s ease, transform .12s ease, box-shadow .16s ease;
+  box-shadow: 0 6px 16px rgba(0,0,0,.12);
+}
+.btn:hover { filter: brightness(1.12); transform: translateY(-1px); }
+.btn:active { transform: translateY(0); filter: brightness(1.0); }
+
+/* Größen */
+.btn--sm { padding: 6px 10px; font-size: 13px; border-radius: 8px; }
+.btn--xs { padding: 4px 8px;  font-size: 12px; border-radius: 7px; }
+
+/* Varianten */
+.btn--success { --btn-bg: #16a34a; }   /* green-600 */
+.btn--warning { --btn-bg: #f59e0b; }   /* amber-500 */
+.btn--danger  { --btn-bg: #ef4444; }   /* red-500 */
+.btn--muted   { --btn-bg: #475569; }   /* slate-600 */
+
+/* Tabellen-Aktionsspalte schöner staffeln */
+.table td .btn + .btn { margin-left: 8px; }

@@ -66,12 +66,7 @@ $vm = (new AdminDashboardController(new DbRepository()))->stats() ?? [];
 
         <!-- System-/Flash-Meldungen -->
         <?php include ROOT_PATH . '/app/includes/messages.php'; ?>
-
-        <?php
-          // Beispiel: Wenn du später Kennzahlen anzeigen willst, kannst du $vm hier verwenden.
-          // z. B. $vm['totalPosts'], $vm['publishedPosts'], $vm['totalUsers'], etc.
-          // Aktuell keine Ausgabe, um Logik/Scope nicht zu ändern.
-        ?>
+        <?php?>
       </div>
     </div>
   </div>

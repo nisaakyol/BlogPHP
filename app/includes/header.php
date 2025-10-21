@@ -11,16 +11,6 @@
 ?>
 <!-- Linke Navigationsleiste -->
 <header role="banner">
-  <!-- Favicons / Manifest -->
-  <link rel="icon" type="image/png" sizes="32x32" href="<?php echo BASE_URL . '/assets/images/favicon-32x32.png'; ?>">
-  <link rel="icon" type="image/png" sizes="16x16" href="<?php echo BASE_URL . '/assets/images/favicon-16x16.png'; ?>">
-  <link rel="manifest" href="<?php echo BASE_URL . '/assets/images/site.webmanifest'; ?>">
-
-  <!-- Logo / Startseite -->
-  <a href="<?php echo BASE_URL . '/index.php'; ?>" class="logo" aria-label="Startseite">
-    <h1 class="logo-text"><span>DH</span>BW Stuttgart</h1>
-  </a>
-
   <!-- Menü-Toggle (mobil) -->
   <i class="fa fa-bars menu-toggle" aria-hidden="true"></i>
 
@@ -28,7 +18,7 @@
   <ul class="nav" role="navigation" aria-label="Hauptnavigation">
     <li><a href="<?php echo BASE_URL . '/index.php'; ?>">Home</a></li>
     <li><a href="<?php echo BASE_URL . '/hardcode/About.php'; ?>">About</a></li>
-    <li><a href="https://www.dhbw-stuttgart.de/service/">Services</a></li>
+    <li><a href="https://www.deepl.com/de/translator">Services</a></li>
 
     <!-- Wenn User eingeloggt: Username + Dropdown -->
     <?php if (isset($_SESSION['id'])): ?>

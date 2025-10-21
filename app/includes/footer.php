@@ -13,23 +13,18 @@
   <div class="footer-content">
     <!-- Info/Branding -->
     <section class="footer-section about" aria-labelledby="footer-about-heading">
-      <h1 id="footer-about-heading" class="logo-text"><span>DH</span>BW Stuttgart</h1>
-      <p>
-        Die DHBW Stuttgart verfügt über 50 Jahre Erfahrung in qualitativ hochwertiger, dualer, praxisintegrierender
-        Hochschulausbildung. Die Studierenden wechseln regelmäßig zwischen der Hochschule und den Partnerunternehmen
-        und sammeln so bereits während der Studienzeit wertvolle Berufserfahrung.
-      </p>
+      <h1 id="footer-about-heading" class="logo-text">Platzhalter</h1>
 
       <div class="contact">
-        <span><i class="fas fa-phone" aria-hidden="true"></i> <span class="sr-only">Telefon:</span> 0711 320-6600</span>
-        <span><i class="fas fa-envelope" aria-hidden="true"></i> <span class="sr-only">E-Mail:</span> info@dhbw-stuttgart.de</span>
+        <span><i class="fas fa-phone" aria-hidden="true"></i> <span class="sr-only">Telefon:</span>0000 00000000</span>
+        <span><i class="fas fa-envelope" aria-hidden="true"></i> <span class="sr-only">E-Mail:</span> bsp@bsp.de</span>
       </div>
 
       <div class="socials" aria-label="Soziale Medien">
-        <a href="https://www.facebook.com/dhbwstuttgart" aria-label="Facebook (DHBW Stuttgart)"><i class="fab fa-facebook" aria-hidden="true"></i></a>
-        <a href="https://www.instagram.com/dhbwstuttgart/" aria-label="Instagram (DHBW Stuttgart)"><i class="fab fa-instagram" aria-hidden="true"></i></a>
-        <a href="https://de.linkedin.com/school/dhbw-stuttgart/" aria-label="LinkedIn (DHBW Stuttgart)"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
-        <a href="https://www.youtube.com/user/dhbwstuttgart" aria-label="YouTube (DHBW Stuttgart)"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+        <a href="https://www.facebook.com/dhbwstuttgart" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+        <a href="https://www.instagram.com/dhbwstuttgart/" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+        <a href="https://de.linkedin.com/school/dhbw-stuttgart/" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
+        <a href="https://www.youtube.com/user/dhbwstuttgart" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
       </div>
     </section>
 
@@ -37,10 +32,7 @@
     <nav class="footer-section links" aria-labelledby="footer-links-heading">
       <h2 id="footer-links-heading">Quick Links</h2>
       <ul>
-        <li><a href="<?php echo BASE_URL . '/hardcode/events.php'; ?>">Events</a></li>
         <li><a href="<?php echo BASE_URL . '/hardcode/team.php'; ?>">Team</a></li>
-        <li><a href="<?php echo BASE_URL . '/hardcode/mentores.php'; ?>">Mentores</a></li>
-        <li><a href="<?php echo BASE_URL . '/hardcode/gallery.php'; ?>">Gallery</a></li>
         <li><a href="<?php echo BASE_URL . '/hardcode/TermsandConditions.php'; ?>">Terms and Conditions</a></li>
       </ul>
     </nav>

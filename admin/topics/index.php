@@ -97,10 +97,15 @@ $topics = $ctrl->index() ?? [];
 
                 <!-- Aktionen: Edit/Delete (Delete aktuell GET-basiert) -->
                 <td>
-                  <a href="edit.php?id=<?php echo $topicId; ?>" class="edit">edit</a>
-                </td>
-                <td>
-                  <a href="index.php?del_id=<?php echo $topicId; ?>" class="delete">delete</a>
+                <a class="btn btn--sm btn--success"
+                    href="edit.php?id=<?php echo (int)$topic['id']; ?>">
+                    Edit
+                </a>
+                <a class="btn btn--sm btn--danger"
+                    href="index.php?del_id=<?php echo (int)$topic['id']; ?>"
+                    onclick="return confirm('Topic wirklich löschen?');">
+                    Delete
+                </a>
                 </td>
               </tr>
             <?php endforeach; ?>
