@@ -36,7 +36,7 @@ $topics = $ctrl->index() ?? [];
   <link
     rel="stylesheet"
     href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7rR hN7udi9RwhKkMHpvLbHG9Sr"
     crossorigin="anonymous"
   />
 
@@ -45,7 +45,7 @@ $topics = $ctrl->index() ?? [];
 
   <!-- Basis-Styles -->
   <link rel="stylesheet" href="../../assets/css/style.css" />
-  <!-- Admin-Styles -->
+  <!-- Admin-Styles (enthält .btn--sm/.btn--lg/.btn--primary/... und .table-actions) -->
   <link rel="stylesheet" href="../../assets/css/admin.css" />
 
   <title>Admin Section - Manage Topics</title>
@@ -63,8 +63,12 @@ $topics = $ctrl->index() ?? [];
     <div class="admin-content">
       <!-- Schnellzugriff -->
       <div class="button-group">
-        <a href="create.php" class="btn btn-big">Add Topic</a>
-        <a href="index.php"  class="btn btn-big">Manage Topics</a>
+        <a href="create.php" class="btn btn--lg btn--primary">
+          <i class="fas fa-plus"></i> Add Topic
+        </a>
+        <a href="index.php" class="btn btn--lg btn--ghost">
+          <i class="fas fa-list"></i> Manage Topics
+        </a>
       </div>
 
       <div class="content">
@@ -95,17 +99,16 @@ $topics = $ctrl->index() ?? [];
                 <!-- Topic-Name -->
                 <td><?php echo htmlspecialchars($topicName, ENT_QUOTES, 'UTF-8'); ?></td>
 
-                <!-- Aktionen: Edit/Delete (Delete aktuell GET-basiert) -->
-                <td>
-                <a class="btn btn--sm btn--success"
-                    href="edit.php?id=<?php echo (int)$topic['id']; ?>">
-                    Edit
-                </a>
-                <a class="btn btn--sm btn--danger"
-                    href="index.php?del_id=<?php echo (int)$topic['id']; ?>"
-                    onclick="return confirm('Topic wirklich löschen?');">
-                    Delete
-                </a>
+                <!-- Aktionen: Edit/Delete -->
+                <td class="table-actions">
+                  <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="btn btn--sm btn--success">
+                    <i class="fas fa-pen"></i> Edit
+                  </a>
+                  <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
+                    class="btn btn--sm btn--danger"
+                    data-confirm="Post wirklich löschen?">
+                    <i class="fas fa-trash"></i> Delete
+                  </a>
                 </td>
               </tr>
             <?php endforeach; ?>

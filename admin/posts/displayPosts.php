@@ -39,28 +39,36 @@ $currentUserId = (int)($_SESSION['id'] ?? 0);
       </td>
 
       <!-- Aktionen: Edit/Delete -->
-      <td>
-        <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="edit">edit</a>
+      <td class="table-actions">
+        <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>"
+           class="btn btn--sm btn--success">
+          <i class="fas fa-pen"></i> Edit
+        </a>
       </td>
-      <td>
-        <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>" class="delete">delete</a>
+      <td class="table-actions">
+        <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
+           class="btn btn--sm btn--danger"
+           data-confirm="Post wirklich löschen?">
+          <i class="fas fa-trash"></i> Delete
+        </a>
       </td>
 
       <!-- Publish/Unpublish (nur Admin) -->
       <?php $isPublished = !empty($post['published']); ?>
       <?php if ($isPublished): ?>
-        <td>
-          <a
-            href="index.php?published=0&amp;p_id=<?php echo (int)($post['id'] ?? 0); ?>"
-            class="unpublish"
-          >unpublish</a>
+        <td class="table-actions">
+          <a href="index.php?published=0&amp;p_id=<?php echo (int)($post['id'] ?? 0); ?>"
+             class="btn btn--sm btn--warning"
+             data-confirm="Diesen Post wirklich UNPUBLISHEN (offline schalten)?">
+            <i class="fas fa-eye-slash"></i> Unpublish
+          </a>
         </td>
       <?php else: ?>
-        <td>
-          <a
-            href="index.php?published=1&amp;p_id=<?php echo (int)($post['id'] ?? 0); ?>"
-            class="publish"
-          >publish</a>
+        <td class="table-actions">
+          <a href="index.php?published=1&amp;p_id=<?php echo (int)($post['id'] ?? 0); ?>"
+             class="btn btn--sm btn--primary">
+            <i class="fas fa-eye"></i> Publish
+          </a>
         </td>
       <?php endif; ?>
     </tr>
@@ -90,11 +98,15 @@ $currentUserId = (int)($_SESSION['id'] ?? 0);
         </td>
 
         <!-- Aktionen: Edit/Delete (kein Publish für normale User) -->
-        <td>
-          <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="edit">edit</a>
-        </td>
-        <td>
-          <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>" class="delete">delete</a>
+        <td class="table-actions">
+          <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="btn btn--sm btn--success">
+            <i class="fas fa-pen"></i> Edit
+          </a>
+          <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
+            class="btn btn--sm btn--danger"
+            data-confirm="Post wirklich löschen?">
+            <i class="fas fa-trash"></i> Delete
+          </a>
         </td>
       </tr>
     <?php endif; ?>

@@ -48,7 +48,7 @@ $admin_users = $vm['admin_users'] ?? [];
 
   <!-- Basis-Styles -->
   <link rel="stylesheet" href="../../assets/css/style.css" />
-  <!-- Admin-Styles -->
+  <!-- Admin-Styles (enthält .btn--sm/.btn--lg/.btn--primary/... und .table-actions) -->
   <link rel="stylesheet" href="../../assets/css/admin.css" />
 
   <title>Admin Section - Manage Users</title>
@@ -66,8 +66,12 @@ $admin_users = $vm['admin_users'] ?? [];
     <div class="admin-content">
       <!-- Schnellzugriff -->
       <div class="button-group">
-        <a href="create.php" class="btn btn-big">Add User</a>
-        <a href="index.php"  class="btn btn-big">Manage Users</a>
+        <a href="create.php" class="btn btn--lg btn--primary">
+          <i class="fas fa-user-plus"></i> Add User
+        </a>
+        <a href="index.php" class="btn btn--lg btn--ghost">
+          <i class="fas fa-users-cog"></i> Manage Users
+        </a>
       </div>
 
       <div class="content">
@@ -89,9 +93,9 @@ $admin_users = $vm['admin_users'] ?? [];
           <tbody>
             <?php foreach ($admin_users as $idx => $user): ?>
               <?php
-                $uid      = (int)   ($user['id']       ?? 0);
-                $uname    = (string)($user['username'] ?? '');
-                $uemail   = (string)($user['email']    ?? '');
+                $uid    = (int)   ($user['id']       ?? 0);
+                $uname  = (string)($user['username'] ?? '');
+                $uemail = (string)($user['email']    ?? '');
               ?>
               <tr>
                 <!-- Laufnummer (1-basiert) -->
@@ -104,11 +108,15 @@ $admin_users = $vm['admin_users'] ?? [];
                 <td><?php echo htmlspecialchars($uemail, ENT_QUOTES, 'UTF-8'); ?></td>
 
                 <!-- Aktionen: Edit/Delete -->
-                <td>
-                  <a href="edit.php?id=<?php echo $uid; ?>" class="edit">edit</a>
-                </td>
-                <td>
-                  <a href="index.php?delete_id=<?php echo $uid; ?>" class="delete">delete</a>
+                <td class="table-actions">
+                  <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="btn btn--sm btn--success">
+                    <i class="fas fa-pen"></i> Edit
+                  </a>
+                  <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
+                    class="btn btn--sm btn--danger"
+                    data-confirm="Post wirklich löschen?">
+                    <i class="fas fa-trash"></i> Delete
+                  </a>
                 </td>
               </tr>
             <?php endforeach; ?>
