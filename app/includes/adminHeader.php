@@ -17,7 +17,7 @@
 
   <!-- Logo / Startseite -->
   <a class="logo" href="<?php echo BASE_URL . '/index.php'; ?>" aria-label="Startseite">
-    <h1 class="logo-text"><span>DH</span>BW Stuttgart</h1>
+    <h1 class="logo-text">BLOG</h1>
   </a>
 
   <!-- Mobile Menü-Icon -->

@@ -75,6 +75,6 @@
   </div>
 
   <div class="footer-bottom">
-    &copy; <?php echo date('Y'); ?> DHBW Stuttgart
+    &copy; <?php echo date('Y'); ?> Platzhalter
   </div>
 </footer>
