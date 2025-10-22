@@ -1,6 +1,6 @@
 <?php
 require 'path.php';                                   // Pfade/URLs (ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/OOP/bootstrap.php';    // OOP-Autoloader
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';    // OOP-Autoloader
 
 use App\OOP\Repositories\DbRepository;                // DB-Zugriff
 use App\OOP\Controllers\PostReadController;           // Post-Reader

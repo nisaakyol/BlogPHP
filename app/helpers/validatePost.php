@@ -1,69 +1,56 @@
 <?php
+declare(strict_types=1);
+
 /**
  * Datei: app/helpers/validatePost.php
- * Zweck: Wrapper für die Post-Validierung → delegiert an OOP\ValidationService
- * Kompatibilität:
- *  - validatePost($data)  // Legacy-Aufruf
- *  - validatePost($data, $files)  // neuer Aufruf
+ * Zweck: Minimal-Validator für Posts (ohne Autoload/Includes)
+ *
+ * Aufruf:
+ *   $errors = validatePost($_POST, $_FILES);            // beim Create
+ *   $errors = validatePost($_POST, $_FILES, false);     // beim Update (Bild optional)
  */
 
-# Root ermitteln
-$__root = defined('ROOT_PATH') ? ROOT_PATH : realpath(__DIR__ . '/../..');
-
-# OOP-Bootstrap laden (app/OOP/bootstrap.php oder OOP/bootstrap.php)
-$__candidateA = $__root . '/app/OOP/bootstrap.php';
-$__candidateB = $__root . '/OOP/bootstrap.php';
-$__boot = is_file($__candidateA) ? $__candidateA : $__candidateB;
-if (is_file($__boot)) {
-  require_once $__boot;
-} else {
-  die('Autoload-Fehler: OOP/bootstrap.php nicht gefunden (gesucht unter ' .
-      htmlspecialchars($__boot, ENT_QUOTES, 'UTF-8') . ')');
-}
-
-use App\OOP\Services\ValidationService;
-
-if (!function_exists('validatePost')) {
-  /**
-   * @param array $data  z. B. $_POST
-   * @param array $files z. B. $_FILES (optional für Legacy-Kompatibilität)
-   * @return array Liste von Fehlermeldungen (leer = OK)
-   */
-  function validatePost(array $data, array $files = []): array
-  {
-    // Falls dein ValidationService eine Methode post() hat, flexibel aufrufen
-    if (class_exists(ValidationService::class) && method_exists(ValidationService::class, 'post')) {
-      try {
-        $ref = new \ReflectionMethod(ValidationService::class, 'post');
-        if ($ref->getNumberOfParameters() >= 2) {
-          return ValidationService::post($data, $files);
-        }
-        return ValidationService::post($data); // Service erwartet nur $data
-      } catch (\Throwable $e) {
-        // Fallback auf einfache Inline-Validierung
-      }
-    }
-
-    // ---------- Fallback-Validierung (Minimalchecks) ----------
+/**
+ * Validiere Title, Body, Topic und (optional) Bild.
+ *
+ * @param array      $data   typ. $_POST
+ * @param array|null $files  typ. $_FILES
+ * @param bool       $requireImageOnCreate  Wenn true und "add-post" gesetzt, ist ein Bild Pflicht
+ * @return array<string> Fehlerliste
+ */
+function validatePost(array $data, ?array $files = null, bool $requireImageOnCreate = true): array
+{
     $errors = [];
 
     $title    = trim((string)($data['title']    ?? ''));
     $body     = trim((string)($data['body']     ?? ''));
-    $topic_id = (int)($data['topic_id'] ?? 0);
+    $topicRaw = (string)($data['topic_id']      ?? '');
 
-    if ($title === '')   $errors[] = 'Title is required';
-    if ($body === '')    $errors[] = 'Body is required';
-    if ($topic_id <= 0)  $errors[] = 'Topic is required';
+    // Titel
+    if ($title === '') {
+        $errors[] = 'Title ist erforderlich';
+    } elseif (mb_strlen($title) > 255) {
+        $errors[] = 'Title ist zu lang (max. 255 Zeichen)';
+    }
 
-    // Bei Create ist ein Bild Pflicht (wie dein Controller es anlegt)
+    // Body
+    if ($body === '') {
+        $errors[] = 'Body ist erforderlich';
+    }
+
+    // Topic (positive Ganzzahl)
+    if ($topicRaw === '' || !ctype_digit($topicRaw) || (int)$topicRaw <= 0) {
+        $errors[] = 'Bitte ein gültiges Topic auswählen';
+    }
+
+    // Bild: nur beim Erstellen erzwingen (wenn gewünscht)
     $isCreate = isset($data['add-post']);
-    if ($isCreate) {
-      $img = $files['image'] ?? null;
-      if (!$img || empty($img['name'])) {
-        $errors[] = 'Post image required';
-      }
+    if ($requireImageOnCreate && $isCreate) {
+        $img = $files['image'] ?? null;
+        if (!$img || empty($img['name'])) {
+            $errors[] = 'Post image required';
+        }
     }
 
     return $errors;
-  }
 }

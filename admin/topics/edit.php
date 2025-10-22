@@ -12,8 +12,7 @@
 require __DIR__ . '/../_admin_boot.php'; // Bootstrap (Session, Konstanten, Guards)
 usersOnly();
                               // Zugriffsschutz: nur Admins
-
-require_once ROOT_PATH . '/app/OOP/bootstrap.php'; // OOP-Autoload/Bootstrap
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';// OOP-Autoload/Bootstrap
 
 use App\OOP\Controllers\Admin\AdminTopicController;
 use App\OOP\Repositories\DbRepository;

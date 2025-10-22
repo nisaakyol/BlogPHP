@@ -46,3 +46,8 @@ if (is_file($composer)) { require_once $composer; }
 $topBootstrap = ROOT_PATH . '/app/OOP/bootstrap.php';
 if (is_file($topBootstrap)) { require_once $topBootstrap; }
 // ^ Initialisiert Klassenautoloader/Bootstrap der OOP-Schicht, sofern vorhanden.
+if (!defined('DB_HOST')) define('DB_HOST', getenv('DB_HOST') ?: 'db');
+if (!defined('DB_PORT')) define('DB_PORT', getenv('DB_PORT') ?: '3306');
+if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'blog');
+if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'bloguser');
+if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: 'blogpass');

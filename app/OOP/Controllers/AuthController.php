@@ -5,108 +5,107 @@ namespace App\OOP\Controllers;
 
 use App\OOP\Repositories\DbRepository;
 
-/**
- * Datei: App/OOP/Controllers/AuthController.php
- *
- * Zweck:
- * - Login-/Register-Flow kapseln.
- * - Setzt Sessions sicher und leitet je nach Rolle um.
- *
- * Hinweise:
- * - Session-Start erfolgt im globalen Bootstrap.
- * - Redirects nutzen relative Ziele; BASE_URL kann bei Bedarf ergänzt werden.
- */
 final class AuthController
 {
-    public function __construct(private DbRepository $db)
-    {
-    }
+    public function __construct(private DbRepository $db) {}
 
-    /**
-     * Verarbeitet das Login-Formular.
-     * - Validiert Pflichtfelder
-     * - Prüft Zugangsdaten
-     * - Setzt Session-Attribute und regeneriert die Session-ID
-     * - Leitet je nach Rolle (Admin/User) auf das passende Dashboard um
-     *
-     * @param array $data typischerweise $_POST
-     * @return void
-     */
-    public function handleLogin(array $data): void
+    /** Registrierung (passend zu register.php) */
+    public function handleRegister(array $post): void
     {
-        $username = trim((string) ($data['username'] ?? ''));
-        $password = (string) ($data['password'] ?? '');
-        $errors   = [];
+        if (session_status() === \PHP_SESSION_NONE) session_start();
 
-        if ($username === '') {
-            $errors[] = 'Bitte Username eingeben.';
-        }
-        if ($password === '') {
-            $errors[] = 'Bitte Passwort eingeben.';
+        // Honeypot (optional)
+        if (!empty($post['honeypot'] ?? '')) {
+            $_SESSION['form_errors'] = ['Ungültige Eingabe.'];
+            $_SESSION['form_old']    = ['username' => '', 'email' => ''];
+            header('Location: ' . BASE_URL . '/register.php'); exit;
         }
 
-        // User vorab definieren, damit es nach der Prüfung sicher existiert
-        $user = null;
+        $username     = trim((string)($post['username'] ?? ''));
+        $email        = trim((string)($post['email'] ?? ''));
+        $password     = (string)($post['password'] ?? '');
+        $passwordConf = (string)($post['passwordConf'] ?? '');
+
+        $errors = [];
+        if ($username === '' || mb_strlen($username) < 3) $errors[] = 'Username muss mind. 3 Zeichen haben.';
+        if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Gültige E-Mail angeben.';
+        if ($password === '' || strlen($password) < 6) $errors[] = 'Passwort muss mind. 6 Zeichen haben.';
+        if ($password !== $passwordConf) $errors[] = 'Passwörter stimmen nicht überein.';
 
         if (!$errors) {
-            $user = $this->db->selectOne('users', ['username' => $username]);
-            if (!$user || !password_verify($password, (string) ($user['password'] ?? ''))) {
-                $errors[] = 'Benutzername oder Passwort ist falsch.';
+            $dupe = $this->db->findUserByUsernameOrEmail($username, $email);
+            if ($dupe) {
+                if (strcasecmp($dupe['username'], $username) === 0) $errors[] = 'Username ist bereits vergeben.';
+                if (strcasecmp($dupe['email'], $email) === 0)     $errors[] = 'Diese E-Mail ist bereits registriert.';
             }
         }
 
         if ($errors) {
             $_SESSION['form_errors'] = $errors;
-            $_SESSION['form_old']    = ['username' => $username];
-            $this->redirect('login.php');
+            $_SESSION['form_old']    = ['username' => $username, 'email' => $email];
+            header('Location: ' . BASE_URL . '/register.php'); exit;
         }
 
-        // ---- SESSION SICHER SETZEN ----
-        $_SESSION['id']       = (int) ($user['id'] ?? 0);
-        $_SESSION['username'] = (string) ($user['username'] ?? '');
-        $_SESSION['admin']    = (int) ($user['admin']    ?? 0);
-        $_SESSION['message']  = 'Du bist eingeloggt';
+        $hash   = password_hash($password, PASSWORD_DEFAULT);
+        $userId = $this->db->createUser($username, $email, $hash);
+
+        // Login-Session setzen
+        $_SESSION['id']       = (int)$userId;
+        $_SESSION['username'] = $username;
+        $_SESSION['admin']    = 0;
+        $_SESSION['message']  = 'Willkommen, Registrierung erfolgreich!';
         $_SESSION['type']     = 'success';
 
-        // Neue Session-ID ausgeben und Session persistieren
-        if (session_status() === \PHP_SESSION_ACTIVE) {
-            @session_regenerate_id(true);
-            @session_write_close(); // zwingt PHP, die Session zu speichern
-        }
-
-        $target = !empty($_SESSION['admin']) ? 'admin/dashboard.php' : 'index.php';
-        $this->redirect($target);
+        header('Location: ' . BASE_URL . '/index.php'); exit;
     }
 
-    /**
-     * Verarbeitet das Registrieren (Platzhalter – Logik bleibt wie zuvor, hier nicht erneut implementiert).
-     *
-     * @param array $data typischerweise $_POST
-     * @return void
-     */
-    public function handleRegister(array $data): void
+    /** Login (passt zu deiner login.php: name="username" + name="password") */
+    public function handleLogin(array $post): void
     {
-        // (unverändert wie zuvor – hier bewusst gekürzt / Platzhalter)
-    }
+        if (session_status() === \PHP_SESSION_NONE) session_start();
 
-    /**
-     * Robuste Weiterleitung mit Fallback, falls Header bereits gesendet wurden.
-     *
-     * @param string $target Ziel-URL (relativ oder absolut)
-     * @return void
-     */
-    private function redirect(string $target): void
-    {
-        if (!headers_sent($file, $line)) {
-            header("Location: {$target}", true, 302);
-            exit;
+        $identifier = trim((string)($post['username'] ?? '')); // Username ODER E-Mail erlaubt
+        $password   = (string)($post['password'] ?? '');
+        $errors     = [];
+
+        if ($identifier === '') $errors[] = 'Bitte Username oder E-Mail eingeben.';
+        if ($password === '')   $errors[] = 'Bitte Passwort eingeben.';
+
+        if (!$errors) {
+            $user = $this->db->findUserByIdentifier($identifier);
+            if (!$user || !password_verify($password, (string)$user['password'])) {
+                $errors[] = 'Zugangsdaten ungültig.';
+            }
         }
 
-        // Fallback-Weiterleitung (HTML/JS), falls bereits Output gesendet wurde
-        $safeTarget = htmlspecialchars($target, ENT_QUOTES, 'UTF-8');
-        echo "<!doctype html><meta charset='utf-8'>
-              <p>Weiterleitung… <a href='{$safeTarget}'>Weiter</a></p>
-              <script>location.replace(" . json_encode($target) . ");</script>";
+        if (!empty($errors)) {
+            $_SESSION['form_errors'] = $errors;
+            $_SESSION['form_old']    = ['username' => $identifier];
+            header('Location: ' . BASE_URL . '/login.php'); exit;
+        }
+
+        // Erfolg → Session
+        $_SESSION['id']       = (int)$user['id'];
+        $_SESSION['username'] = (string)$user['username'];
+        $_SESSION['admin']    = (int)$user['admin']; // 0/1
+        $_SESSION['message']  = 'Erfolgreich eingeloggt.';
+        $_SESSION['type']     = 'success';
+
+        // Admins ins Admin-Dashboard, normale User ins User-Dashboard
+        header('Location: ' . BASE_URL . '/index.php');
         exit;
+    }
+
+    /** Optionaler Logout */
+    public function handleLogout(): void
+    {
+        if (session_status() === \PHP_SESSION_NONE) session_start();
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $p = session_get_cookie_params();
+            setcookie(session_name(), '', time()-42000, $p['path'], $p['domain'] ?? '', $p['secure'] ?? false, $p['httponly'] ?? false);
+        }
+        session_destroy();
+        header('Location: ' . BASE_URL . '/index.php'); exit;
     }
 }

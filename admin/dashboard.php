@@ -12,7 +12,8 @@
 require __DIR__ . '/_admin_boot.php';
 usersOnly();
 
-require_once ROOT_PATH . '/app/OOP/bootstrap.php';
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+
 
 use App\OOP\Controllers\Admin\AdminDashboardController;
 use App\OOP\Repositories\DbRepository;

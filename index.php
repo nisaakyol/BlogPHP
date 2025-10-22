@@ -1,6 +1,6 @@
 <?php
 require 'path.php'; // Lädt Projektpfade/URLs (z. B. ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/OOP/bootstrap.php'; // Autoload/Bootstrap der OOP-Schicht (Namespaces, Services, Repos)
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php'; // Autoload/Bootstrap der OOP-Schicht (Namespaces, Services, Repos)
 require_once ROOT_PATH . '/app/database/connect.php'; // stellt $conn für LegacyDB sicher
 
 use App\OOP\Repositories\DbRepository; // OOP-Repository mit DB-Methoden (selectAll, getPublishedPosts, ...)

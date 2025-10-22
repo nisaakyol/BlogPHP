@@ -20,7 +20,7 @@
 - Login-Schutz für Anlegen/Ändern/Löschen (Lesen & Kommentieren offen)
 - Threaded Comments (Antworten auf Kommentare)
 - Benutzerverwaltung 
-Z- usätzliche Artikel-Attribute (Bild, Kategorie, Untertitel, …)
+- usätzliche Artikel-Attribute (Bild, Kategorie, Untertitel, …)
 
 #andere Funktionen
 - Öffentliche Startseite mit Topic-Filter (t_id) und Suche über Titel & Body (LIKE), nur published Posts, absteigend nach created_at
@@ -29,12 +29,15 @@ Z- usätzliche Artikel-Attribute (Bild, Kategorie, Untertitel, …)
 
 
 #ToDo
-- Sign Up mit eintrag in die DB
-- User eigene Posts verwalten über dashboard
+prio1
 - Freigabe-Workflow (Admin/Chef-Redakteur mit Review/Approve)
+- Ordner-Struktur
+- LegacyDB weg
+- email funktion
+
+prio2
 - kommentare nur über eigenen User-Name schreiben
 - HTML/Markdown-Eingabe für Artikeltexte
-- Ordner-Struktur
 - Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)
 - RSS-Feed (z. B. /feed.xml)
 - Bemerkungen/Notizen (interne Redaktionsnotizen pro Artikel)

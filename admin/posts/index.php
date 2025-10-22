@@ -3,30 +3,29 @@
  * Datei: admin/posts/index.php
  * Zweck: Übersicht zur Verwaltung aller Blog-Posts (Listenansicht + Aktionen)
  *
- * Hinweise:
- * - Aktionen (delete, publish/unpublish) werden aktuell per GET ausgelöst
- *   (siehe Links in displayPosts.php). Für Produktion empfehlenswert: POST + CSRF.
- * - $ctrl->index() liefert das ViewModel mit $posts und $usersById.
+ * - Eingeloggt erforderlich (usersOnly)
+ * - Admin: Moderation (Approve/Reject)
+ * - Normale User: nur eigene Posts (Edit/Delete)
+ * - displayPosts.php rendert NUR <tr>…</tr>-Zeilen (keine zweite Tabelle)
  */
 
-require __DIR__ . '/../_admin_boot.php'; // Bootstrap (Session, Konstanten, Guards)
-usersOnly();                              // Zugriffsschutz: nur eingeloggte Benutzer
+require __DIR__ . '/../_admin_boot.php';
+usersOnly();
 
-require_once ROOT_PATH . '/app/OOP/bootstrap.php'; // OOP-Autoload/Bootstrap
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/helpers/csrf.php';
 
 use App\OOP\Controllers\Admin\AdminPostController;
 use App\OOP\Repositories\DbRepository;
 
-// Controller instanzieren
+$isAdmin = !empty($_SESSION['admin']);
+
+// Controller
 $ctrl = new AdminPostController(new DbRepository());
 
-// Primitive GET-Aktionen (wie bestehend):
-if (isset($_GET['delete_id'])) {
-  $ctrl->delete((int)$_GET['delete_id']);
-}
-if (isset($_GET['published'], $_GET['p_id'])) {
-  $ctrl->togglePublish((int)$_GET['p_id'], (int)$_GET['published']);
-}
+// (Optional) Alte GET-Aktionen – wenn du sie noch brauchst. Sonst entfernen.
+// if (isset($_GET['delete_id'])) { $ctrl->delete((int)$_GET['delete_id']); }
+// if (isset($_GET['published'], $_GET['p_id'])) { $ctrl->togglePublish((int)$_GET['p_id'], (int)$_GET['published']); }
 
 // ViewModel abrufen
 $vm        = $ctrl->index();
@@ -40,35 +39,23 @@ $usersById = $vm['usersById'] ?? [];
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-  <!-- Font Awesome (Icons) -->
-  <link
-    rel="stylesheet"
-    href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
-    crossorigin="anonymous"
-  >
-
-  <!-- Google Fonts (legacy – wird global evtl. ersetzt durch travel.css Fonts) -->
+  <!-- Fonts/Icons -->
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
 
-  <!-- Basis-Styles -->
+  <!-- Styles -->
   <link rel="stylesheet" href="../../assets/css/style.css">
-  <!-- Admin-Styles -->
   <link rel="stylesheet" href="../../assets/css/admin.css">
 
-  <title>Admin Section – Manage Posts</title>
+  <title>Admin – Manage Posts</title>
 </head>
 <body>
-  <!-- Obere Admin-Navigation -->
   <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
-    <!-- Linke Sidebar (Navigation im Adminbereich) -->
     <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
 
-    <!-- Hauptinhalt: Postverwaltung -->
     <div class="admin-content">
-      <!-- Schnellzugriff -->
       <div class="button-group">
         <a href="create.php" class="btn btn-big">Add Post</a>
         <a href="index.php"  class="btn btn-big">Manage Posts</a>
@@ -77,40 +64,34 @@ $usersById = $vm['usersById'] ?? [];
       <div class="content">
         <h2 class="page-title">Manage Posts</h2>
 
-        <!-- System-/Flash-Meldungen -->
         <?php include ROOT_PATH . "/app/includes/messages.php"; ?>
 
-        <!-- Tabellarische Übersicht -->
-        <table>
+        <table class="table" style="width:100%;border-collapse:collapse;">
           <thead>
             <tr>
-              <th>SN</th>
+              <th style="width:60px;">SN</th>
               <th>Title</th>
-              <th>Author</th>
-              <th colspan="3">Action</th>
+              <th style="width:180px;">Author</th>
+              <th style="width:130px;">Status</th>
+              <th style="width:240px;">Actions</th>
+              <?php if ($isAdmin): ?>
+                <th style="width:260px;">Moderation</th>
+              <?php endif; ?>
             </tr>
           </thead>
           <tbody>
             <?php
-              /**
-               * Row-Rendering ausgelagert:
-               * - Admins: alle Posts inkl. publish/unpublish
-               * - User : nur eigene Posts (kein publish/unpublish)
-               * displayPosts.php nutzt $posts und $usersById.
-               */
+              // displayPosts.php rendert nur die <tr>-Zeilen
               require ROOT_PATH . "/admin/posts/displayPosts.php";
             ?>
           </tbody>
         </table>
-      </div><!-- /.content -->
-    </div><!-- /.admin-content -->
-  </div><!-- /.admin-wrapper -->
+      </div>
+    </div>
+  </div>
 
-  <!-- Vendor-Skripte -->
+  <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <!-- CKEditor -->
-  <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
-  <!-- Projekt-JS -->
   <script src="../../assets/js/scripts.js"></script>
 </body>
 </html>

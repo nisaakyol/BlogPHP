@@ -3,7 +3,7 @@
    Fehler bleiben erhalten, Felder (außer Passwörter) werden vorbefüllt.
 */
 require 'path.php';                                     // Projektpfade/URLs (ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/OOP/bootstrap.php';      // Bootstrap/Autoloader der OOP-Schicht
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';      // Bootstrap/Autoloader der OOP-Schicht
 
 use App\OOP\Controllers\AuthController;                 // Zuständig für Register-/Login-Flow
 use App\OOP\Repositories\DbRepository;                  // DB-Zugriffsschicht (per DI)

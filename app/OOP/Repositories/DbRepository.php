@@ -3,221 +3,257 @@ declare(strict_types=1);
 
 namespace App\OOP\Repositories;
 
-use App\OOP\Core\LegacyDB;
-use mysqli_stmt;
+use App\OOP\Core\DB;
+use PDO;
 
-use const MYSQLI_ASSOC;
-
-/**
- * DbRepository
- *
- * Dünne Wrapper um die Legacy-mysqli-Schicht:
- * - Prepared Statements über executeQuery()
- * - CRUD-Helper (selectAll/selectOne/create/update/delete)
- * - Blog-spezifische Reader (Published Posts, Posts by Topic, Suche, Comments)
- *
- * Hinweise:
- * - $table/$orderBy werden unverändert in SQL übernommen (wie im Legacy-Code).
- * - Parameterbindung erfolgt als Strings ('s') – Legacy-kompatibel.
- * - get_result() erfordert mysqlnd.
- */
-class DbRepository
+final class DbRepository
 {
+    // ─────────────────────────────────────────────────────────────────────
+    // Legacy-kompatible API
+    // ─────────────────────────────────────────────────────────────────────
+
     /**
-     * Führt ein Prepared Statement aus und bindet alle Parameter (als 's').
+     * selectAll('posts', ['published'=>1], 'created_at DESC', 10)
      *
-     * @param string $sql   SQL mit Platzhaltern (?)
-     * @param array  $data  Assoziatives oder numerisches Array der Parameterwerte
-     * @return mysqli_stmt
+     * @return array<int,array<string,mixed>>
      */
-    // App\OOP\Repositories\DbRepository
-    public function createComment(array $data): int
-    {
-        // schreibt in Spalte `comment` (nicht `body`)
-        return $this->create('comments', [
-            'post_id'   => (string)(int)$data['post_id'],
-            'parent_id' => ($data['parent_id'] === '' ? null : (string)(int)$data['parent_id']),
-            'username'  => (string)$data['username'],
-            'comment'   => (string)$data['comment'], // <— wichtig
-        ]);
-    }
+    public function selectAll(
+        string $table,
+        array $conditions = [],
+        ?string $orderBy = null,
+        ?int $limit = null
+    ): array {
+        [$whereSql, $params] = $this->buildWhere($conditions);
+        $sql = "SELECT * FROM {$table}{$whereSql}";
+        if ($orderBy) $sql .= " ORDER BY {$orderBy}";
+        if ($limit !== null) $sql .= " LIMIT " . (int)$limit;
 
-    public function executeQuery(string $sql, array $data): mysqli_stmt
-    {
-        $conn = LegacyDB::conn();
-        $stmt = $conn->prepare($sql);
-
-        if (!$stmt) {
-            die('Database prepare error: ' . $conn->error);
-        }
-
-        if (!empty($data)) {
-            $values = array_values($data);
-            $types  = str_repeat('s', count($values));
-            $stmt->bind_param($types, ...$values);
-        }
-
-        $stmt->execute();
-        return $stmt;
+        $st = DB::pdo()->prepare($sql);
+        $st->execute($params);
+        return $st->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * SELECT * FROM $table [WHERE ...] [ORDER BY ...]
+     * selectOne('users', ['id'=>5])
      */
-    public function selectAll(string $table, array $conditions = [], string $orderBy = ''): array
+    public function selectOne(string $table, array $conditions): ?array
     {
-        $sql = "SELECT * FROM {$table}";
-
-        if (!empty($conditions)) {
-            $where = [];
-            foreach ($conditions as $k => $_) {
-                $where[] = "{$k}=?";
-            }
-            $sql .= ' WHERE ' . implode(' AND ', $where);
-        }
-
-        if ($orderBy !== '') {
-            $sql .= " ORDER BY {$orderBy}";
-        }
-
-        $stmt = $this->executeQuery($sql, $conditions);
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
-
-    /**
-     * SELECT * FROM $table [WHERE ...] [ORDER BY ...] LIMIT 1
-     */
-    public function selectOne(string $table, array $conditions = [], string $orderBy = ''): ?array
-    {
-        $sql = "SELECT * FROM {$table}";
-
-        if (!empty($conditions)) {
-            $where = [];
-            foreach ($conditions as $k => $_) {
-                $where[] = "{$k}=?";
-            }
-            $sql .= ' WHERE ' . implode(' AND ', $where);
-        }
-
-        if ($orderBy !== '') {
-            $sql .= " ORDER BY {$orderBy}";
-        }
-
-        $sql .= ' LIMIT 1';
-
-        $stmt = $this->executeQuery($sql, $conditions);
-        $row  = $stmt->get_result()->fetch_assoc();
-
+        [$whereSql, $params] = $this->buildWhere($conditions);
+        $sql = "SELECT * FROM {$table}{$whereSql} LIMIT 1";
+        $st  = DB::pdo()->prepare($sql);
+        $st->execute($params);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
 
     /**
-     * INSERT INTO $table SET col1=?, col2=?, ...
-     *
+     * create('posts', ['title'=>'..', 'body'=>'..'])
      * @return int Insert-ID
      */
     public function create(string $table, array $data): int
     {
-        $sql  = 'INSERT INTO ' . $table . ' SET ';
-        $sql .= implode(', ', array_map(static fn ($k) => "{$k}=?", array_keys($data)));
-
-        $stmt = $this->executeQuery($sql, $data);
-        return $stmt->insert_id;
+        $cols  = array_keys($data);
+        $place = array_map(fn($c) => ':' . $c, $cols);
+        $sql   = "INSERT INTO {$table} (" . implode(',', $cols) . ") VALUES (" . implode(',', $place) . ")";
+        $st    = DB::pdo()->prepare($sql);
+        $st->execute($data);
+        return (int) DB::pdo()->lastInsertId();
     }
 
     /**
-     * UPDATE $table SET col1=?, ... WHERE id=?
-     *
-     * @return int Betroffene Zeilen
+     * update('posts', 5, ['title'=>'..'])
+     * @return int betroffene Zeilen
      */
     public function update(string $table, int $id, array $data): int
     {
-        $sql  = 'UPDATE ' . $table . ' SET ';
-        $sql .= implode(', ', array_map(static fn ($k) => "{$k}=?", array_keys($data)));
-        $sql .= ' WHERE id=?';
+        $sets = [];
+        foreach ($data as $k => $v) $sets[] = "{$k} = :{$k}";
+        $sql = "UPDATE {$table} SET " . implode(',', $sets) . " WHERE id = :__id";
+        $data['__id'] = $id;
 
-        $dataPlus       = $data;
-        $dataPlus['id'] = $id;
-
-        $stmt = $this->executeQuery($sql, $dataPlus);
-        return $stmt->affected_rows;
+        $st = DB::pdo()->prepare($sql);
+        $st->execute($data);
+        return $st->rowCount();
     }
 
     /**
-     * DELETE FROM $table WHERE id=?
-     *
-     * @return int Betroffene Zeilen
+     * delete('posts', 5)
      */
     public function delete(string $table, int $id): int
     {
-        $stmt = $this->executeQuery("DELETE FROM {$table} WHERE id=?", ['id' => $id]);
-        return $stmt->affected_rows;
+        $st = DB::pdo()->prepare("DELETE FROM {$table} WHERE id = ?");
+        $st->execute([$id]);
+        return $st->rowCount();
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Spezielle Helfer für Auth (werden von AuthController genutzt)
+    // ─────────────────────────────────────────────────────────────────────
+
+    public function findUserByUsernameOrEmail(string $username, string $email): ?array
+    {
+        $sql = "SELECT id, username, email FROM users
+                WHERE username = :u OR email = :e
+                LIMIT 1";
+        $st = DB::pdo()->prepare($sql);
+        $st->execute([':u' => $username, ':e' => $email]);
+        $row = $st->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+    public function createUser(string $username, string $email, string $passwordHash): int
+    {
+        $pdo = \App\OOP\Core\DB::pdo();
+
+        // vorhandene Spalten der Tabelle users ermitteln
+        $cols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(\PDO::FETCH_COLUMN, 0);
+        $hasCreated = in_array('created_at', $cols, true);
+        $hasUpdated = in_array('updated_at', $cols, true);
+        $hasAdmin   = in_array('admin',      $cols, true);
+
+        // Basisdaten
+        $data = [
+            'username' => $username,
+            'email'    => $email,
+            'password' => $passwordHash,
+        ];
+        if ($hasAdmin)   { $data['admin'] = 0; }
+
+        // Spalten-/Values-Listen dynamisch bauen
+        $columns = array_keys($data);
+        $place   = array_map(fn($c) => ':' . $c, $columns);
+
+        // optionale Zeitstempel anhängen
+        if ($hasCreated) { $columns[] = 'created_at'; $place[] = 'NOW()'; }
+        if ($hasUpdated) { $columns[] = 'updated_at'; $place[] = 'NOW()'; }
+
+        $sql = 'INSERT INTO users (' . implode(',', $columns) . ') VALUES (' . implode(',', $place) . ')';
+        $st  = $pdo->prepare($sql);
+
+        // Nur benannte Parameter binden (NOW() hat keinen Parameter)
+        $params = array_intersect_key($data, array_flip(array_filter($columns, fn($c) => $c !== 'created_at' && $c !== 'updated_at')));
+        $st->execute($params);
+
+        return (int)$pdo->lastInsertId();
+    }
+
+
+   public function findUserByIdentifier(string $identifier): ?array
+    {
+        $sql = "SELECT * FROM users
+                WHERE username = :u OR email = :e
+                LIMIT 1";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':u' => $identifier, ':e' => $identifier]);
+        $row = $st->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+
+    // ─────────────────────────────────────────────────────────────────────
+    // intern
+    // ─────────────────────────────────────────────────────────────────────
+
     /**
-     * Veröffentliche Posts (inkl. Username), absteigend nach Erstellzeit.
+     * Baut WHERE aus ['col'=>val, 'col2'=>val2] → " WHERE col=:col AND col2=:col2"
+     * und liefert auch das Parameter-Array.
+     *
+     * @return array{0:string,1:array<string,mixed>}
      */
+    private function buildWhere(array $conditions): array
+    {
+        if ($conditions === []) return ['', []];
+
+        $parts  = [];
+        $params = [];
+        foreach ($conditions as $k => $v) {
+            $param        = ':' . $k;
+            $parts[]      = "{$k} = {$param}";
+            $params[$param] = $v;
+        }
+        return [' WHERE ' . implode(' AND ', $parts), $params];
+    }
+    // Nur "approved" Posts für Frontend
     public function getPublishedPosts(): array
     {
         $sql = "SELECT p.*, u.username
-                  FROM posts AS p
-                  JOIN users AS u ON p.user_id = u.id
-                 WHERE p.published = ?
-              ORDER BY p.created_at DESC";
-
-        $stmt = $this->executeQuery($sql, ['published' => 1]);
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE p.status = 'approved' -- statt p.published=1
+                ORDER BY p.created_at DESC";
+        $st = \App\OOP\Core\DB::pdo()->query($sql);
+        return $st->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Veröffentliche Posts eines Topics (inkl. Username).
-     */
-    public function getPostsByTopicId($topic_id): array
+    public function submitPost(int $postId, int $userId): int
+    {
+        $sql = "UPDATE posts
+                SET status = 'submitted', published = 0, reviewed_at = NULL, reviewer_id = NULL, review_note = NULL
+                WHERE id = :id AND user_id = :uid";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':id' => $postId, ':uid' => $userId]);
+        return $st->rowCount();
+    }
+
+    public function approvePost(int $postId, int $reviewerId, ?string $note = null): int
+    {
+        $sql = "UPDATE posts
+                SET status = 'approved', published = 1, reviewer_id = :rid, reviewed_at = NOW(), review_note = :note
+                WHERE id = :id";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':rid' => $reviewerId, ':note' => $note, ':id' => $postId]);
+        return $st->rowCount();
+    }
+
+    public function rejectPost(int $postId, int $reviewerId, ?string $note = null): int
+    {
+        $sql = "UPDATE posts
+                SET status = 'rejected', published = 0, reviewer_id = :rid, reviewed_at = NOW(), review_note = :note
+                WHERE id = :id";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':rid' => $reviewerId, ':note' => $note, ':id' => $postId]);
+        return $st->rowCount();
+    }
+
+    public function listByStatus(string $status): array
     {
         $sql = "SELECT p.*, u.username
-                  FROM posts AS p
-                  JOIN users AS u ON p.user_id = u.id
-                 WHERE p.published = ? AND topic_id = ?
-              ORDER BY p.created_at DESC";
-
-        $stmt = $this->executeQuery($sql, ['published' => 1, 'topic_id' => $topic_id]);
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE p.status = :s
+                ORDER BY p.created_at DESC";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':s' => $status]);
+        return $st->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Suche in Titel/Body (nur veröffentlichte Posts), inkl. Username.
-     */
+    // Veröffentliche Posts zu einem Topic (für ?t_id=...)
+    public function getPostsByTopicId(int $topicId): array
+    {
+        $sql = "SELECT p.*, u.username
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE p.published = 1
+                AND p.topic_id = :tid
+                ORDER BY p.created_at DESC";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':tid' => $topicId]);
+        return $st->fetchAll(\PDO::FETCH_ASSOC);
+    }
+
+    // Volltextsuche (einfach) über title/body (LIKE), nur veröffentlichte
     public function searchPosts(string $term): array
     {
-        $match = '%' . $term . '%';
-
+        $like = '%' . $term . '%';
         $sql = "SELECT p.*, u.username
-                  FROM posts AS p
-                  JOIN users AS u ON p.user_id = u.id
-                 WHERE p.published = ?
-                   AND (p.title LIKE ? OR p.body LIKE ?)
-              ORDER BY p.created_at DESC";
-
-        $stmt = $this->executeQuery($sql, ['published' => 1, $match, $match]);
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE p.published = 1
+                AND (p.title LIKE :q OR p.body LIKE :q)
+                ORDER BY p.created_at DESC";
+        $st = \App\OOP\Core\DB::pdo()->prepare($sql);
+        $st->execute([':q' => $like]);
+        return $st->fetchAll(\PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Kommentare zu einem Post (optional gefiltert nach parent_id), neueste zuerst.
-     */
-    public function fetchCommentsForPost(int $postId, ?int $parentId): array
-    {
-        $sql  = 'SELECT c.* FROM comments AS c WHERE c.post_id = ?';
-        $data = [$postId];
-
-        if ($parentId !== null) {
-            $sql   .= ' AND c.parent_id = ?';
-            $data[] = $parentId;
-        }
-
-        $sql  .= ' ORDER BY c.created_at DESC';
-
-        $stmt = $this->executeQuery($sql, $data);
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
 }

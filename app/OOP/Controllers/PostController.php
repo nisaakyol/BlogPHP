@@ -195,16 +195,27 @@ class PostController
 
                 $_SESSION['message'] = 'Post created successfuly';
             } else {
-                // Optionales Admin-Publish-Flag wie im Legacy-Code
+                // Optional: Mail an Admin
                 $_POST['AdminPublish'] = isset($_POST['AdminPublish']) ? 1 : 0;
-
-                EmailService::sendPublish($_POST, $this->root);
+                if (!empty($_POST['AdminPublish'])) {
+                    EmailService::sendPublish($_POST, $this->root);
+                }
                 unset($_POST['AdminPublish']);
 
-                $_POST['published'] = 0;
-                $this->repo->create($_POST);
+                // >>> HIER Status setzen (Freigabe-Workflow)
+                if (!empty($_SESSION['id']) && !empty($_POST['title'])) {
+                    if (!empty($_POST['published'])) { unset($_POST['published']); } // User setzt publish nicht
+                    $_POST['status']    = 'submitted';  // wenn Häkchen „zur Freigabe“
+                    $_POST['published'] = 0;
+                } else {
+                    $_POST['status']    = 'draft';
+                    $_POST['published'] = 0;
+                }
 
-                $_SESSION['message'] = 'Post wurde zur Veröffentlichung versandt';
+            $this->repo->create($_POST);
+
+            $_SESSION['message'] = 'Post wurde zur Freigabe eingereicht';
+            $_SESSION['type']    = 'success';
             }
 
             $_SESSION['type'] = 'success';

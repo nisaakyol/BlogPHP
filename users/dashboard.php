@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../path.php';
 require_once ROOT_PATH . '/app/helpers/middleware.php';   // bringt usersOnly()
-require_once ROOT_PATH . '/app/OOP/bootstrap.php';
+require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
 
 // Nur Login nötig – keine Admin-Pflicht
 usersOnly();

@@ -1,59 +1,40 @@
 <?php
-/**
- * Datei: app/helpers/validateUser.php
- * Zweck: Wrapper-Funktionen für die User-Validierung → delegieren an OOP ValidationService
- *
- * Verhalten:
- * - Lädt den OOP-Bootstrap.
- * - Stellt validateUser(array $data) und validateLogin(array $data) bereit
- *   (nur, wenn die Funktionen nicht bereits existieren).
- */
-
-// Projekt-Root bestimmen (ROOT_PATH bevorzugt)
-$__root = defined('ROOT_PATH') ? ROOT_PATH : realpath(__DIR__ . '/../..');
-// ^ Prüft zuerst, ob eine globale Konstante ROOT_PATH existiert (konfigurierter Projekt-Root).
-//   Falls nicht, wird der Root relativ zu dieser Datei ermittelt: zwei Ebenen nach oben ausgehend von app/helpers.
-
-// OOP-Bootstrap laden (app/OOP/bootstrap.php oder Fallback OOP/bootstrap.php)
-$__candidateA = $__root . '/app/OOP/bootstrap.php'; // Primärer Pfad, wenn OOP unter app/ liegt.
-$__candidateB = $__root . '/OOP/bootstrap.php';     // Alternativer Pfad, wenn OOP auf Root-Ebene liegt.
-$__boot = is_file($__candidateA) ? $__candidateA : $__candidateB; // Bevorzugt A, sonst B (ohne Existenzprüfung von B an dieser Stelle).
-
-if (is_file($__boot)) {
-  require_once $__boot; // Lädt einmalig den Autoloader/Bootstrap der OOP-Schicht (Namespaces, Services, Configs).
-} else {
-  // Harte Abbruchstrategie: Wenn kein Bootstrap gefunden wird, Anwendung mit klarer Fehlermeldung stoppen.
-  die(
-    'Autoload-Fehler: OOP/bootstrap.php nicht gefunden (gesucht unter ' .
-    htmlspecialchars($__boot, ENT_QUOTES, 'UTF-8') . // Ausgabe sicher encodieren (XSS-Prävention im Fehlerfall).
-    ')'
-  );
-}
-
-use App\OOP\Services\ValidationService; // Bindet den Namespaced-Service ein, der die eigentliche Validierung kapselt.
+declare(strict_types=1);
 
 /**
- * Validiert Daten für das Anlegen/Aktualisieren eines Users.
+ * validateUser
+ * Minimaler Validator (ohne irgendwelche Includes).
  *
- * @param array $data Eingabedaten (z. B. $_POST)
- * @return array      Validierungsergebnis gemäß Service-Contract
+ * @param array $data
+ * @param bool  $isUpdate  Bei Updates darf das Passwort leer bleiben
+ * @return array<string>
  */
-if (!function_exists('validateUser')) { // Schutz vor Doppeldefinition, falls Helper mehrfach eingebunden wird.
-  function validateUser(array $data): array
-  {
-    return ValidationService::user($data); // Delegation: ruft die statische Methode im OOP-Service auf.
-  }
-}
+function validateUser(array $data, bool $isUpdate = false): array
+{
+    $errors = [];
 
-/**
- * Validiert Login-Daten (z. B. auf Pflichtfelder/Format).
- *
- * @param array $data Eingabedaten (z. B. $_POST)
- * @return array      Validierungsergebnis gemäß Service-Contract
- */
-if (!function_exists('validateLogin')) { // Ebenfalls Idempotenz: nur definieren, wenn noch nicht vorhanden.
-  function validateLogin(array $data): array
-  {
-    return ValidationService::login($data); // Delegation: Auslagerung der Logik an den OOP-Validierungsservice.
-  }
+    $username = trim((string)($data['username'] ?? ''));
+    $email    = trim((string)($data['email']    ?? ''));
+    $pass     = (string)($data['password']      ?? '');
+    $pass2    = (string)($data['passwordConf']  ?? '');
+
+    if ($username === '' || mb_strlen($username) < 3) {
+        $errors[] = 'Username muss mindestens 3 Zeichen haben';
+    }
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = 'Bitte gültige E-Mail angeben';
+    }
+
+    if (!$isUpdate || $pass !== '' || $pass2 !== '') {
+        if ($pass === '') {
+            $errors[] = 'Passwort ist erforderlich';
+        } elseif (strlen($pass) < 6) {
+            $errors[] = 'Passwort muss mindestens 6 Zeichen haben';
+        }
+        if ($pass !== $pass2) {
+            $errors[] = 'Passwörter stimmen nicht überein';
+        }
+    }
+
+    return $errors;
 }
