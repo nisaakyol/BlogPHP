@@ -10,6 +10,7 @@
  */
 
 require __DIR__ . '/../_admin_boot.php';
+usersOnly();
 
 use App\OOP\Controllers\Admin\AdminTopicController;
 use App\OOP\Repositories\DbRepository;

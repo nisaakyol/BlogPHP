@@ -9,19 +9,15 @@ use PDO;
 /**
  * PostRepository
  *
- * Bietet CRUD-Operationen für Posts.
- * Nutzt, falls vorhanden, die Legacy-Helper (selectAll/selectOne/create/update/delete),
- * andernfalls PDO über App\OOP\Core\DB.
+ * CRUD + Hilfsfunktionen für Posts.
+ * Falls Legacy-Helper (selectAll/selectOne/create/update/delete) existieren, werden sie genutzt,
+ * sonst PDO über App\OOP\Core\DB.
  */
 class PostRepository
 {
     private string $table = 'posts';
 
-    /**
-     * Alle Posts absteigend nach created_at.
-     *
-     * @return array<int, array<string,mixed>>
-     */
+    /** @return array<int, array<string,mixed>> */
     public function allOrdered(): array
     {
         if (function_exists('selectAll')) {
@@ -29,14 +25,10 @@ class PostRepository
         }
 
         $stmt = DB::pdo()->query("SELECT * FROM {$this->table} ORDER BY created_at DESC");
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Alle Topics (für Auswahlfelder etc.).
-     *
-     * @return array<int, array<string,mixed>>
-     */
+    /** @return array<int, array<string,mixed>> */
     public function topics(): array
     {
         if (function_exists('selectAll')) {
@@ -44,50 +36,51 @@ class PostRepository
         }
 
         $stmt = DB::pdo()->query('SELECT * FROM topics ORDER BY name ASC');
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Einen Post per ID laden.
-     */
+    /** Einen Post per ID laden. */
     public function findById(int $id): ?array
     {
         if (function_exists('selectOne')) {
             return selectOne($this->table, ['id' => $id]) ?: null;
         }
 
-        $st = DB::pdo()->prepare("SELECT * FROM {$this->table} WHERE id = ?");
-        $st->execute([$id]);
+        $st = DB::pdo()->prepare("SELECT * FROM {$this->table} WHERE id = :id LIMIT 1");
+        $st->execute([':id' => $id]);
         $row = $st->fetch(PDO::FETCH_ASSOC);
 
         return $row ?: null;
     }
 
-    /**
-     * Post anlegen.
-     *
-     * @return int Insert-ID
-     */
+    /** Posts eines Autors (User) */
+    public function listByAuthor(int $userId): array
+    {
+        $st = DB::pdo()->prepare(
+            "SELECT * FROM {$this->table} WHERE user_id = :uid ORDER BY created_at DESC"
+        );
+        $st->execute([':uid' => $userId]);
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /** @return int Insert-ID */
     public function create(array $data): int
     {
         if (function_exists('create')) {
             return (int) create($this->table, $data);
         }
 
-        $cols   = array_keys($data);
-        $place  = array_map(static fn ($c) => ":{$c}", $cols);
-        $sql    = "INSERT INTO {$this->table} (" . implode(',', $cols) . ') VALUES (' . implode(',', $place) . ')';
-        $st     = DB::pdo()->prepare($sql);
+        $cols  = array_keys($data);
+        $place = array_map(static fn($c) => ":{$c}", $cols);
+        $sql   = "INSERT INTO {$this->table} (" . implode(',', $cols) . ') VALUES (' . implode(',', $place) . ')';
+
+        $st = DB::pdo()->prepare($sql);
         $st->execute($data);
 
         return (int) DB::pdo()->lastInsertId();
     }
 
-    /**
-     * Post aktualisieren.
-     *
-     * @return int Anzahl betroffener Zeilen
-     */
+    /** @return int Anzahl betroffener Zeilen */
     public function update(int $id, array $data): int
     {
         if (function_exists('update')) {
@@ -108,28 +101,20 @@ class PostRepository
         return $st->rowCount();
     }
 
-    /**
-     * Post löschen.
-     *
-     * @return int Anzahl betroffener Zeilen
-     */
+    /** @return int Anzahl betroffener Zeilen */
     public function delete(int $id): int
     {
         if (function_exists('delete')) {
             return (int) delete($this->table, $id);
         }
 
-        $st = DB::pdo()->prepare("DELETE FROM {$this->table} WHERE id = ?");
-        $st->execute([$id]);
+        $st = DB::pdo()->prepare("DELETE FROM {$this->table} WHERE id = :id");
+        $st->execute([':id' => $id]);
 
         return $st->rowCount();
     }
 
-    /**
-     * Published-Flag setzen.
-     *
-     * @return int Anzahl betroffener Zeilen
-     */
+    /** @return int Anzahl betroffener Zeilen */
     public function setPublished(int $id, int $flag): int
     {
         return $this->update($id, ['published' => $flag]);

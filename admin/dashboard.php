@@ -10,7 +10,7 @@
  */
 
 require __DIR__ . '/_admin_boot.php';
-adminOnly();
+usersOnly();
 
 require_once ROOT_PATH . '/app/OOP/bootstrap.php';
 

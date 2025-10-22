@@ -11,7 +11,8 @@
  */
 
 require __DIR__ . '/../_admin_boot.php'; // Bootstrap (Session, Konstanten, Guards)
-adminOnly();                               // Zugriffsschutz: nur Admins
+usersOnly();
+                               // Zugriffsschutz: nur Admins
 
 require_once ROOT_PATH . '/app/OOP/bootstrap.php'; // OOP-Autoload/Bootstrap
 

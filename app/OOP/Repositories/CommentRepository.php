@@ -37,4 +37,12 @@ class CommentRepository
             ':post' => $postId,
         ]);
     }
+    public function listByAuthor(int $userId): array {
+    return $this->db->query("SELECT * FROM posts WHERE user_id = {$userId} ORDER BY created_at DESC")->fetchAll();
+    }
+
+    public function listCommentsByUser(int $userId): array {
+        return $this->db->query("SELECT * FROM comments WHERE user_id = {$userId} ORDER BY created_at DESC")->fetchAll();
+    }
+
 }
