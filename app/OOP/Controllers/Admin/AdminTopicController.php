@@ -5,129 +5,168 @@ namespace App\OOP\Controllers\Admin;
 
 use App\OOP\Repositories\DbRepository;
 
-/**
- * AdminTopicController
- *
- * Zuständig für:
- * - Auflisten aller Topics (index)
- * - Löschen (destroy)
- * - Erstellen (store)
- * - Aktualisieren (update)
- *
- * Hinweise:
- * - Validierung ist bewusst minimal gehalten (nur Pflichtfeld "name"),
- *   um bestehendes Verhalten nicht zu ändern.
- * - Redirect-Ziele bleiben relativ (index.php/create.php/edit.php),
- *   wie im ursprünglichen Code.
- */
-class AdminTopicController
+final class AdminTopicController
 {
-    public function __construct(private DbRepository $db)
+    public array $errors = [];
+    public array $topic  = [
+        'id'          => '',
+        'name'        => '',
+        'slug'        => '',
+        'description' => '',
+    ];
+
+    public function __construct(private DbRepository $repo) {}
+
+    /** Formularansicht + Liste für die rechte Spalte */
+    public function create(): array
     {
+        $this->ensureAdmin();
+        return [
+            'topic'  => $this->topic,
+            'errors' => $this->errors,
+            'topics' => $this->repo->selectAll('topics', [], 'id DESC'),
+        ];
     }
 
-    /**
-     * Liste aller Topics (für admin/topics/index.php).
-     *
-     * @return array Liste der Topics, absteigend nach id sortiert
-     */
-    public function index(): array
-    {
-        // ggf. Sortierung anpassen
-        return $this->db->selectAll('topics', [], 'id DESC');
-    }
-
-    /**
-     * Topic löschen (für admin/topics/index.php?del_id=...).
-     *
-     * @param int $id Topic-ID
-     * @return void
-     */
-    public function destroy(int $id): void
-    {
-        $this->db->delete('topics', $id);
-
-        $_SESSION['message'] = 'Topic wurde erfolgreich gelöscht';
-        $_SESSION['type']    = 'success';
-
-        header('Location: index.php');
-        exit;
-    }
-
-    /**
-     * Topic erstellen (genutzt von create.php).
-     *
-     * @param array $data Form-Daten (typisch $_POST)
-     * @return void
-     */
+    /** Neuen Topic speichern (POST) */
     public function store(array $data): void
     {
-        $name        = trim($data['name'] ?? '');
-        $description = trim($data['description'] ?? '');
+        $this->ensureAdmin();
 
-        $errors = [];
+        // Felder holen
+        $name = trim((string)($data['name'] ?? ''));
+        $desc = trim((string)($data['description'] ?? ''));
+
+        // Validierung
         if ($name === '') {
-            $errors[] = 'Name wird benötigt.';
+            $this->errors[] = 'Name ist erforderlich.';
+        } elseif (mb_strlen($name) > 150) {
+            $this->errors[] = 'Name ist zu lang (max. 150 Zeichen).';
         }
 
-        if ($errors) {
-            $_SESSION['form_errors'] = $errors;
-            $_SESSION['form_old']    = ['name' => $name, 'description' => $description];
+        // eindeutiger Name?
+        $exists = $this->repo->selectOne('topics', ['name' => $name]);
+        if ($exists) {
+            $this->errors[] = 'Ein Topic mit diesem Namen existiert bereits.';
+        }
 
-            header('Location: create.php');
+        if ($this->errors) {
+            // zurück zur Create-Ansicht mit Fehlermeldungen
+            $_SESSION['errors'] = $this->errors;
+            $_SESSION['old']    = ['name' => $name, 'description' => $desc];
+            header('Location: ' . BASE_URL . '/admin/topics/create.php');
             exit;
         }
 
-        $this->db->create('topics', [
+        // Slug generieren
+        $slug = $this->slugify($name);
+
+        // Speichern
+        $this->repo->create('topics', [
             'name'        => $name,
-            'description' => $description,
+            'slug'        => $slug,
+            'description' => $desc,
         ]);
 
-        $_SESSION['message'] = 'Topic wurde erfolgreich erstellt';
+        $_SESSION['message'] = 'Topic erfolgreich angelegt.';
         $_SESSION['type']    = 'success';
-
-        header('Location: index.php');
+        header('Location: ' . BASE_URL . '/admin/topics/index.php');
         exit;
     }
 
-    /**
-     * Topic aktualisieren (genutzt von edit.php).
-     *
-     * @param int   $id   Topic-ID
-     * @param array $data Form-Daten (typisch $_POST)
-     * @return void
-     */
+    /** Liste (falls du sie brauchst) */
+    public function index(): array
+    {
+        $this->ensureAdmin();
+        return ['topics' => $this->repo->selectAll('topics', [], 'id DESC')];
+    }
+
+    /** Bearbeitungs-View vorbereiten */
+    public function edit(int $id): array
+    {
+        $this->ensureAdmin();
+        $topic = $this->repo->selectOne('topics', ['id' => $id]);
+        if (!$topic) {
+            $_SESSION['message'] = 'Topic nicht gefunden.';
+            $_SESSION['type']    = 'error';
+            header('Location: ' . BASE_URL . '/admin/topics/index.php');
+            exit;
+        }
+        return [
+            'topic'  => $topic,
+            'errors' => [],
+            'topics' => $this->repo->selectAll('topics', [], 'id DESC'),
+        ];
+    }
+
+    /** Update (POST von edit.php) */
     public function update(int $id, array $data): void
     {
-        $name        = trim($data['name'] ?? '');
-        $description = trim($data['description'] ?? '');
+        $this->ensureAdmin();
 
-        $errors = [];
+        $name = trim((string)($data['name'] ?? ''));
+        $desc = trim((string)($data['description'] ?? ''));
+
         if ($name === '') {
-            $errors[] = 'Name wird benötigt.';
+            $this->errors[] = 'Name ist erforderlich.';
         }
 
-        if ($errors) {
-            $_SESSION['form_errors'] = $errors;
-            $_SESSION['form_old']    = [
-                'name'        => $name,
-                'description' => $description,
-                'id'          => $id,
-            ];
+        // Name muss eindeutig sein (ohne sich selbst)
+        $dup = $this->repo->selectOne('topics', ['name' => $name]);
+        if ($dup && (int)$dup['id'] !== $id) {
+            $this->errors[] = 'Ein Topic mit diesem Namen existiert bereits.';
+        }
 
-            header('Location: edit.php?id=' . $id);
+        if ($this->errors) {
+            $_SESSION['errors'] = $this->errors;
+            $_SESSION['old']    = ['name' => $name, 'description' => $desc];
+            header('Location: ' . BASE_URL . '/admin/topics/edit.php?id=' . $id);
             exit;
         }
 
-        $this->db->update('topics', $id, [
+        $slug = $this->slugify($name);
+
+        $this->repo->update('topics', $id, [
             'name'        => $name,
-            'description' => $description,
+            'slug'        => $slug,
+            'description' => $desc,
         ]);
 
-        $_SESSION['message'] = 'Topic updated erfolgreich';
+        $_SESSION['message'] = 'Topic aktualisiert.';
         $_SESSION['type']    = 'success';
-
-        header('Location: index.php');
+        header('Location: ' . BASE_URL . '/admin/topics/index.php');
         exit;
+    }
+
+    /** Löschen */
+    public function destroy(int $id): void
+    {
+        $this->ensureAdmin();
+        $this->repo->delete('topics', $id);
+        $_SESSION['message'] = 'Topic gelöscht.';
+        $_SESSION['type']    = 'success';
+        header('Location: ' . BASE_URL . '/admin/topics/index.php');
+        exit;
+    }
+
+    // ───────────────────────── intern ─────────────────────────
+
+    private function ensureAdmin(): void
+    {
+        if (!isset($_SESSION['id']) || empty($_SESSION['admin'])) {
+            $_SESSION['message'] = 'Nur Admins haben Zugriff.';
+            $_SESSION['type']    = 'error';
+            header('Location: ' . BASE_URL . '/index.php');
+            exit;
+        }
+    }
+
+    private function slugify(string $name): string
+    {
+        $s = iconv('UTF-8', 'ASCII//TRANSLIT', $name);
+        $s = strtolower((string)$s);
+        $s = preg_replace('/[^a-z0-9]+/i', '-', $s);
+        $s = trim($s ?? '', '-');
+        return $s === '' ? 'topic' : $s;
     }
 }

@@ -5,41 +5,23 @@ namespace App\OOP\Controllers\Admin;
 
 use App\OOP\Repositories\DbRepository;
 
-/**
- * AdminPostController
- *
- * Verantwortlich für:
- * - index()         : Listenansicht
- * - delete()        : Löschen eines Posts
- * - togglePublish() : Publish/Unpublish umschalten
- * - handleCreate()  : Anlegen eines neuen Posts (GET + POST)
- * - handleEdit()    : Bearbeiten eines bestehenden Posts (GET + POST)
- *
- * Architekturhinweise:
- * - Validierung erfolgt über den Helper app/helpers/validatePost.php (Wrapper um OOP\ValidationService).
- * - Bild-Uploads landen in /assets/images/ (unterhalb ROOT_PATH).
- * - PRG-Pattern: Nach erfolgreichen Schreiboperationen Redirect zurück zur Übersicht.
- * - Diese Datei wurde angepasst, damit validatePost($post, $files) aufgerufen wird
- *   (vorher wurde nur $post übergeben → Upload wurde nicht gesehen).
- */
 class AdminPostController
 {
     public function __construct(private DbRepository $db)
     {
     }
 
-    /* ---------- INDEX ---------- */
-
+    /* =========================================================================
+     * LISTE
+     * ========================================================================= */
     /**
-     * Liefert Posts (absteigend nach created_at) und eine User-Map (id => username).
-     *
+     * Liefert Posts (absteigend) + Map der Usernamen.
      * @return array{posts: array<int, array>, usersById: array<int, string>}
      */
     public function index(): array
     {
         $posts = $this->db->selectAll('posts', [], 'created_at DESC');
 
-        // User-Map (id => username) für die Anzeige
         $users     = $this->db->selectAll('users', [], 'id ASC');
         $usersById = [];
         foreach ($users as $u) {
@@ -49,59 +31,83 @@ class AdminPostController
         return compact('posts', 'usersById');
     }
 
-    /* ---------- DELETE via GET ?delete_id=ID ---------- */
-
-    /**
-     * Löscht einen Post und zeigt eine Flash-Message.
-     */
+    /* =========================================================================
+     * LÖSCHEN (?delete_id=ID)
+     * ========================================================================= */
     public function delete(int $id): void
     {
-        $this->db->delete('posts', $id);
+        if (session_status() === \PHP_SESSION_NONE) session_start();
+        usersOnly();
 
-        $_SESSION['message'] = 'Post wurde erfolgreich gelöscht';
-        $_SESSION['type']    = 'success';
+        try {
+            // Post holen (für Exists-/Rechte-Check)
+            $post = $this->db->selectOne('posts', ['id' => $id]);
+            if (!$post) {
+                $_SESSION['message'] = 'Post nicht gefunden.';
+                $_SESSION['type']    = 'error';
+                $this->backToIndex();
+            }
 
-        header('Location: ' . BASE_URL . '/admin/posts/index.php');
-        exit;
+            $isOwner = ((int)$post['user_id'] === (int)($_SESSION['id'] ?? 0));
+            $isAdmin = !empty($_SESSION['admin']);
+            if (!$isAdmin && !$isOwner) {
+                $_SESSION['message'] = 'Nicht erlaubt.';
+                $_SESSION['type']    = 'error';
+                $this->backToIndex();
+            }
+
+            // Falls du Zusatz-Tabellen hast (Kommentare/Bridges), hier optional bereinigen.
+            // try { $this->db->deleteWhere('comments', ['post_id' => $id]); } catch (\Throwable $e) {}
+            // try { $this->db->deleteWhere('post_topic', ['post_id' => $id]); } catch (\Throwable $e) {}
+
+            $rows = $this->db->delete('posts', $id);
+
+            if ($rows > 0) {
+                $_SESSION['message'] = 'Post wurde gelöscht.';
+                $_SESSION['type']    = 'success';
+            } else {
+                $_SESSION['message'] = 'Post konnte nicht gelöscht werden.';
+                $_SESSION['type']    = 'error';
+            }
+        } catch (\Throwable $e) {
+            $_SESSION['message'] = 'Löschen fehlgeschlagen: ' . $e->getMessage();
+            $_SESSION['type']    = 'error';
+        }
+
+        $this->backToIndex();
     }
 
-    /* ---------- Publish Toggle: ?published=0/1&p_id=ID ---------- */
-
-    /**
-     * Setzt den Published-Status eines Posts (0/1) und zeigt eine Flash-Message.
-     */
+    /* =========================================================================
+     * PUBLISH TOGGLE (?published=0/1&p_id=ID)
+     * ========================================================================= */
     public function togglePublish(int $postId, int $published): void
     {
-        $this->db->update('posts', $postId, ['published' => $published]);
+        if (session_status() === \PHP_SESSION_NONE) session_start();
+        usersOnly();
 
-        $_SESSION['message'] = 'Post published Status geändert!';
+        $this->db->update('posts', $postId, ['published' => $published ? 1 : 0]);
+
+        $_SESSION['message'] = 'Publish-Status geändert.';
         $_SESSION['type']    = 'success';
 
-        header('Location: ' . BASE_URL . '/admin/posts/index.php');
-        exit;
+        $this->backToIndex();
     }
 
-    /* ---------- CREATE (GET + POST) ---------- */
-
+    /* =========================================================================
+     * CREATE (GET + POST)
+     * ========================================================================= */
     /**
-     * Handhabt das Erstellen eines neuen Posts.
-     * - GET  : liefert Defaults + Topics
-     * - POST : validiert, lädt ggf. Bild hoch und speichert anschließend
-     *
-     * @param array $post  typischerweise $_POST
-     * @param array $files typischerweise $_FILES
-     *
-     * @return array ViewModel für die Formular-View
+     * @param array $post  i.d.R. $_POST
+     * @param array $files i.d.R. $_FILES
+     * @return array ViewModel
      */
     public function handleCreate(array $post, array $files): array
     {
-        // Validierungs-Wrapper laden (delegiert an ValidationService::post() falls vorhanden)
         require_once ROOT_PATH . '/app/helpers/validatePost.php';
 
-        // Topics für das <select>
         $topics = $this->db->selectAll('topics', [], 'name ASC');
 
-        // Default-ViewModel (für initialen GET-Aufruf)
+        // Initiales ViewModel (GET)
         $vm = [
             'errors'    => [],
             'title'     => '',
@@ -110,21 +116,16 @@ class AdminPostController
             'published' => '',
             'topics'    => $topics,
         ];
-
-        // Initialer GET-Aufruf → VM mit Defaults zurückgeben
         if (!isset($post['add-post'])) {
             return $vm;
         }
 
-        // --- Validierung ---
-        // WICHTIG: $files mitgeben, damit die Validierung (bzw. der Service) Upload-Kontext sieht
+        // Validierung
         $errors    = validatePost($post, $files);
 
-        // --- Datei-Upload ---
-        // Upload-Fehler werden in $errors ergänzt; required=true (bei Create Pflichtbild)
+        // Upload (bei Create Pflicht)
         $imageName = $this->uploadImage($files['image'] ?? null, $errors, true);
 
-        // Bei Fehlern: Formular mit alten Werten erneut rendern
         if ($errors) {
             return [
                 'errors'    => $errors,
@@ -136,47 +137,42 @@ class AdminPostController
             ];
         }
 
-        // --- Persistenzdaten vorbereiten ---
+        // Speicherdaten (Body RAW speichern)
+        if (session_status() === \PHP_SESSION_NONE) session_start();
         $data = [
-            'title'    => $post['title'],
-            'body'     => htmlentities($post['body']), // Legacy: HTML als Entities speichern
+            'title'    => (string)$post['title'],
+            'body'     => (string)$post['body'],     // RAW
             'topic_id' => (int)$post['topic_id'],
-            'user_id'  => (int)$_SESSION['id'],
+            'user_id'  => (int)($_SESSION['id'] ?? 0),
             'image'    => $imageName,
         ];
 
         if (!empty($_SESSION['admin'])) {
-            // Admin darf direkt veröffentlichen
             $data['published'] = !empty($post['published']) ? 1 : 0;
             $this->db->create('posts', $data);
-            $_SESSION['message'] = 'Post created successfuly';
+            $_SESSION['message'] = 'Post erstellt.';
         } else {
-            // Normaler User: optional Freigabe-Mail an Admin
             if (!empty($post['AdminPublish'])) {
                 $this->sendPublishEmail($post['title']);
             }
             $data['published'] = 0;
             $this->db->create('posts', $data);
-            $_SESSION['message'] = 'Post wurde zur Veröffentlichung versandt';
+            $_SESSION['message'] = 'Post eingereicht (wartet auf Freigabe).';
         }
 
         $_SESSION['type'] = 'success';
-        header('Location: ' . BASE_URL . '/admin/posts/index.php');
-        exit;
+        $this->backToIndex();
+        return []; // unerreicht
     }
 
-    /* ---------- EDIT (GET + POST) ---------- */
-
+    /* =========================================================================
+     * EDIT (GET + POST)
+     * ========================================================================= */
     /**
-     * Handhabt das Bearbeiten eines bestehenden Posts.
-     * - GET ?id=…   : lädt Post und Topics für das Formular
-     * - POST update : validiert, optional Bild hochladen/ersetzen, speichert
-     *
-     * @param array $get   typischerweise $_GET
-     * @param array $post  typischerweise $_POST
-     * @param array $files typischerweise $_FILES
-     *
-     * @return array ViewModel für die Formular-View
+     * @param array $get   i.d.R. $_GET
+     * @param array $post  i.d.R. $_POST
+     * @param array $files i.d.R. $_FILES
+     * @return array ViewModel
      */
     public function handleEdit(array $get, array $post, array $files): array
     {
@@ -184,22 +180,23 @@ class AdminPostController
 
         $topics = $this->db->selectAll('topics', [], 'name ASC');
 
-        // GET ?id => Formular mit Daten befüllen
+        // GET ?id => Formular befüllen
         if (isset($get['id'])) {
             $p = $this->db->selectOne('posts', ['id' => (int)$get['id']]);
 
             return [
                 'errors'    => [],
-                'id'        => $p['id'],
-                'title'     => $p['title'],
-                'body'      => $p['body'],
-                'topic_id'  => $p['topic_id'],
-                'published' => (int)$p['published'],
+                'id'        => (int)($p['id'] ?? 0),
+                'title'     => (string)($p['title'] ?? ''),
+                // Für das Formular: Body DEkodieren -> Editor zeigt kein &lt;p&gt; an
+                'body'      => html_entity_decode((string)($p['body'] ?? ''), ENT_QUOTES, 'UTF-8'),
+                'topic_id'  => (int)($p['topic_id'] ?? 0),
+                'published' => (int)($p['published'] ?? 0),
                 'topics'    => $topics,
             ];
         }
 
-        // Kein POST-Submit → leere VM (mit Topics) zurückgeben
+        // Kein Submit -> leeres VM
         if (!isset($post['update-post'])) {
             return [
                 'errors'    => [],
@@ -212,14 +209,12 @@ class AdminPostController
             ];
         }
 
-        // --- Validierung ---
-        // $files mitgeben (auch wenn Bild optional ist)
+        // Validierung
         $errors    = validatePost($post, $files);
 
-        // --- Datei-Upload (optional) ---
-        $imageName = $this->uploadImage($files['image'] ?? null, $errors, false); // required=false
+        // Upload (optional)
+        $imageName = $this->uploadImage($files['image'] ?? null, $errors, false);
 
-        // Fehler → Formular mit alten Werten wieder befüllen
         if ($errors) {
             return [
                 'errors'    => $errors,
@@ -234,43 +229,33 @@ class AdminPostController
 
         $id = (int)$post['id'];
 
-        // --- Persistenzdaten vorbereiten ---
+        // Speicherdaten (Body RAW speichern)
+        if (session_status() === \PHP_SESSION_NONE) session_start();
         $data = [
-            'title'     => $post['title'],
-            'body'      => htmlentities($post['body']), // Legacy: HTML als Entities speichern
+            'title'     => (string)$post['title'],
+            'body'      => (string)$post['body'],  // RAW
             'topic_id'  => (int)$post['topic_id'],
-            'user_id'   => (int)$_SESSION['id'],
+            'user_id'   => (int)($_SESSION['id'] ?? 0),
             'published' => !empty($post['published']) ? 1 : 0,
         ];
-
-        // Neues Bild übernehmen, wenn vorhanden
         if ($imageName) {
             $data['image'] = $imageName;
         }
 
         $this->db->update('posts', $id, $data);
 
-        $_SESSION['message'] = 'Post update erfolgreich';
+        $_SESSION['message'] = 'Post gespeichert.';
         $_SESSION['type']    = 'success';
 
-        header('Location: ' . BASE_URL . '/admin/posts/index.php');
-        exit;
+        $this->backToIndex();
+        return []; // unerreicht
     }
 
-    /* ---------- Helpers ---------- */
-
-    /**
-     * Bild-Upload.
-     *
-     * @param array|null $file     $_FILES['image']-Struktur oder null
-     * @param array      $errors   Referenz auf Fehlerliste (wird ergänzt)
-     * @param bool       $required true = Bild ist Pflicht (Create), false = optional (Edit)
-     *
-     * @return string|null  Dateiname bei Erfolg, sonst null
-     */
+    /* =========================================================================
+     * HELPERS
+     * ========================================================================= */
     private function uploadImage(?array $file, array &$errors, bool $required = true): ?string
     {
-        // Kein Feld/keine Auswahl
         if (!$file || empty($file['name'])) {
             if ($required) {
                 $errors[] = 'Post image required';
@@ -278,11 +263,9 @@ class AdminPostController
             return null;
         }
 
-        // Zielname: Zeitstempel + Original-Basename
-        $imageName = time() . '_' . basename($file['name']);
+        $imageName = time() . '_' . basename((string)$file['name']);
         $dest      = ROOT_PATH . '/assets/images/' . $imageName;
 
-        // Physisch verschieben; schlägt dies fehl, Fehler melden
         if (!@move_uploaded_file($file['tmp_name'] ?? '', $dest)) {
             $errors[] = 'Failed to upload image';
             return null;
@@ -291,17 +274,18 @@ class AdminPostController
         return $imageName;
     }
 
-    /**
-     * Versendet eine Info-Mail an den Admin für Veröffentlichungsfreigabe.
-     */
     private function sendPublishEmail(string $title): void
     {
-        // Gleiche Logik wie früher (sammelstelledhbwblog@gmail.com)
         $information = [
             'Title'     => $title,
             'nachricht' => 'Bitte veröffentlichen Sie diesen Post',
         ];
-
         require ROOT_PATH . '/app/helpers/send-email.php';
+    }
+
+    private function backToIndex(): void
+    {
+        header('Location: ' . BASE_URL . '/admin/posts/index.php');
+        exit;
     }
 }

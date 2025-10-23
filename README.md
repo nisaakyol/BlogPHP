@@ -21,30 +21,27 @@
 - Threaded Comments (Antworten auf Kommentare)
 - Benutzerverwaltung 
 - usätzliche Artikel-Attribute (Bild, Kategorie, Untertitel, …)
+- Freigabe-Workflow (Admin/Chef-Redakteur mit Review/Approve)
 
 #andere Funktionen
 - Öffentliche Startseite mit Topic-Filter (t_id) und Suche über Titel & Body (LIKE), nur published Posts, absteigend nach created_at
 - Kommentare anlegen (Form), inkl. Antwort auf Kommentar (threaded via parent_id)
 - Rollen & Schutz: usersOnly() und adminOnly() Middleware (Admin-Flag in users.admin)
-
+- Benutzerverwaltung → Liste/Löschen vorhanden; fehlt: Benutzer anlegen/bearbeiten, Rollen/Zuweisungen, Passwort-Reset.
+- Bemerkungen/Notizen (interne Redaktionsnotizen pro Artikel)
 
 #ToDo
 prio1
-- Freigabe-Workflow (Admin/Chef-Redakteur mit Review/Approve)
 - Ordner-Struktur
 - LegacyDB weg
 - email funktion
 
 prio2
-- kommentare nur über eigenen User-Name schreiben
 - HTML/Markdown-Eingabe für Artikeltexte
 - Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)
 - RSS-Feed (z. B. /feed.xml)
-- Bemerkungen/Notizen (interne Redaktionsnotizen pro Artikel)
 
     Teilweise umgesetzt / Lücke schließen:
-    - Zusätzliche Artikel-Attribute → Bild & Kategorie sind da, Untertitel (o. ä.) fehlt noch.
     - Spam-Protection → Honeypot existiert, CAPTCHA (z. B. hCaptcha/reCAPTCHA) optional ergänzen.
-    - Benutzerverwaltung → Liste/Löschen vorhanden; fehlt: Benutzer anlegen/bearbeiten, Rollen/Zuweisungen, Passwort-Reset.
     - E-Mail-Versand (einfacher Textmailer/Service; z. B. für Kontakt)
 

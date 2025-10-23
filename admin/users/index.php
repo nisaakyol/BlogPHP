@@ -9,10 +9,9 @@
  */
 
 require __DIR__ . '/../_admin_boot.php';
-usersOnly();
+adminOnly(); // oder usersOnly(), falls gewünscht
 
 require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
-
 
 use App\OOP\Controllers\Admin\AdminUserController;
 use App\OOP\Repositories\DbRepository;
@@ -23,6 +22,9 @@ $ctrl = new AdminUserController(new DbRepository());
 // Delete via GET (bestehendes Verhalten beibehalten)
 if (isset($_GET['delete_id'])) {
   $ctrl->delete((int) $_GET['delete_id']);
+  // delete() sollte redirecten; sonst hier zur Sicherheit:
+  header('Location: ' . BASE_URL . '/admin/users/index.php');
+  exit;
 }
 
 // ViewModel laden
@@ -40,7 +42,6 @@ $admin_users = $vm['admin_users'] ?? [];
   <link
     rel="stylesheet"
     href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
     crossorigin="anonymous"
   />
 
@@ -92,35 +93,41 @@ $admin_users = $vm['admin_users'] ?? [];
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($admin_users as $idx => $user): ?>
-              <?php
-                $uid    = (int)   ($user['id']       ?? 0);
-                $uname  = (string)($user['username'] ?? '');
-                $uemail = (string)($user['email']    ?? '');
-              ?>
+            <?php if (empty($admin_users)): ?>
               <tr>
-                <!-- Laufnummer (1-basiert) -->
-                <td><?php echo $idx + 1; ?></td>
-
-                <!-- Username -->
-                <td><?php echo htmlspecialchars($uname, ENT_QUOTES, 'UTF-8'); ?></td>
-
-                <!-- E-Mail -->
-                <td><?php echo htmlspecialchars($uemail, ENT_QUOTES, 'UTF-8'); ?></td>
-
-                <!-- Aktionen: Edit/Delete -->
-                <td class="table-actions">
-                  <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="btn btn--sm btn--success">
-                    <i class="fas fa-pen"></i> Edit
-                  </a>
-                  <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
-                    class="btn btn--sm btn--danger"
-                    data-confirm="Post wirklich löschen?">
-                    <i class="fas fa-trash"></i> Delete
-                  </a>
-                </td>
+                <td colspan="4">Keine Benutzer vorhanden.</td>
               </tr>
-            <?php endforeach; ?>
+            <?php else: ?>
+              <?php foreach ($admin_users as $idx => $user): ?>
+                <?php
+                  $uid    = (int)   ($user['id']       ?? 0);
+                  $uname  = (string)($user['username'] ?? '');
+                  $uemail = (string)($user['email']    ?? '');
+                ?>
+                <tr>
+                  <!-- Laufnummer (1-basiert) -->
+                  <td><?= $idx + 1 ?></td>
+
+                  <!-- Username -->
+                  <td><?= htmlspecialchars($uname, ENT_QUOTES, 'UTF-8') ?></td>
+
+                  <!-- E-Mail -->
+                  <td><?= htmlspecialchars($uemail, ENT_QUOTES, 'UTF-8') ?></td>
+
+                  <!-- Aktionen: Edit/Delete -->
+                  <td class="table-actions">
+                    <a href="edit.php?id=<?= $uid ?>" class="btn btn--sm btn--success">
+                      <i class="fas fa-pen"></i> Edit
+                    </a>
+                    <a href="index.php?delete_id=<?= $uid ?>"
+                       class="btn btn--sm btn--danger"
+                       onclick="return confirm('User wirklich löschen?');">
+                      <i class="fas fa-trash"></i> Delete
+                    </a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </div><!-- /.content -->
@@ -129,8 +136,6 @@ $admin_users = $vm['admin_users'] ?? [];
 
   <!-- Vendor-Skripte -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <!-- CKEditor (hier meist nicht benötigt) -->
-  <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
   <!-- Projekt-JS -->
   <script src="../../assets/js/scripts.js"></script>
 </body>

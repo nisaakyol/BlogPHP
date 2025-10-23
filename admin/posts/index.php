@@ -24,7 +24,7 @@ $isAdmin = !empty($_SESSION['admin']);
 $ctrl = new AdminPostController(new DbRepository());
 
 // (Optional) Alte GET-Aktionen – wenn du sie noch brauchst. Sonst entfernen.
-// if (isset($_GET['delete_id'])) { $ctrl->delete((int)$_GET['delete_id']); }
+if (isset($_GET['delete_id'])) { $ctrl->delete((int)$_GET['delete_id']); }
 // if (isset($_GET['published'], $_GET['p_id'])) { $ctrl->togglePublish((int)$_GET['p_id'], (int)$_GET['published']); }
 
 // ViewModel abrufen

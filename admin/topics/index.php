@@ -6,11 +6,12 @@
  * Hinweise:
  * - Delete wird derzeit per GET-Parameter ausgelöst (index.php?del_id=...).
  *   Für Produktion empfehlenswert: POST + CSRF-Token.
- * - $ctrl->index() liefert die Topics-Liste.
  */
 
-require __DIR__ . '/../_admin_boot.php';
-usersOnly();
+require __DIR__ . '/../_admin_boot.php';                  // Session, BASE_URL, ROOT_PATH, Guards
+adminOnly();                                              // nur Admins
+
+require_once ROOT_PATH . '/app/OOP/bootstrap.php';        // Autoloader
 
 use App\OOP\Controllers\Admin\AdminTopicController;
 use App\OOP\Repositories\DbRepository;
@@ -21,10 +22,14 @@ $ctrl = new AdminTopicController(new DbRepository());
 // Lösch-Aktion (aktuell GET-basiert; später besser POST + CSRF)
 if (isset($_GET['del_id'])) {
   $ctrl->destroy((int) $_GET['del_id']);
+  // destroy() macht Redirect; falls nicht, hier zur Sicherheit:
+  header('Location: ' . BASE_URL . '/admin/topics/index.php');
+  exit;
 }
 
-// Daten für die Tabelle laden
-$topics = $ctrl->index() ?? [];
+// Daten für die Tabelle laden (Controller liefert ['topics'=>…])
+$vm     = $ctrl->index();
+$topics = $vm['topics'] ?? [];
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -37,7 +42,6 @@ $topics = $ctrl->index() ?? [];
   <link
     rel="stylesheet"
     href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-    integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7rR hN7udi9RwhKkMHpvLbHG9Sr"
     crossorigin="anonymous"
   />
 
@@ -46,7 +50,7 @@ $topics = $ctrl->index() ?? [];
 
   <!-- Basis-Styles -->
   <link rel="stylesheet" href="../../assets/css/style.css" />
-  <!-- Admin-Styles (enthält .btn--sm/.btn--lg/.btn--primary/... und .table-actions) -->
+  <!-- Admin-Styles -->
   <link rel="stylesheet" href="../../assets/css/admin.css" />
 
   <title>Admin Section - Manage Topics</title>
@@ -88,31 +92,38 @@ $topics = $ctrl->index() ?? [];
             </tr>
           </thead>
           <tbody>
-            <?php foreach ($topics as $idx => $topic): ?>
-              <?php
-                $topicId   = (int) ($topic['id']   ?? 0);
-                $topicName = (string) ($topic['name'] ?? '');
-              ?>
+            <?php if (empty($topics)): ?>
               <tr>
-                <!-- Laufnummer (1-basiert) -->
-                <td><?php echo $idx + 1; ?></td>
-
-                <!-- Topic-Name -->
-                <td><?php echo htmlspecialchars($topicName, ENT_QUOTES, 'UTF-8'); ?></td>
-
-                <!-- Aktionen: Edit/Delete -->
-                <td class="table-actions">
-                  <a href="edit.php?id=<?php echo (int)($post['id'] ?? 0); ?>" class="btn btn--sm btn--success">
-                    <i class="fas fa-pen"></i> Edit
-                  </a>
-                  <a href="index.php?delete_id=<?php echo (int)($post['id'] ?? 0); ?>"
-                    class="btn btn--sm btn--danger"
-                    data-confirm="Post wirklich löschen?">
-                    <i class="fas fa-trash"></i> Delete
-                  </a>
-                </td>
+                <td colspan="3">Keine Topics vorhanden.</td>
               </tr>
-            <?php endforeach; ?>
+            <?php else: ?>
+              <?php $sn = 1; ?>
+              <?php foreach ($topics as $topic): ?>
+                <?php
+                  $topicId   = (int)($topic['id']   ?? 0);
+                  $topicName = (string)($topic['name'] ?? '');
+                ?>
+                <tr>
+                  <!-- Laufnummer (1-basiert) -->
+                  <td><?= $sn++ ?></td>
+
+                  <!-- Topic-Name -->
+                  <td><?= htmlspecialchars($topicName, ENT_QUOTES, 'UTF-8') ?></td>
+
+                  <!-- Aktionen: Edit/Delete -->
+                  <td class="table-actions">
+                    <a href="edit.php?id=<?= $topicId ?>" class="btn btn--sm btn--success">
+                      <i class="fas fa-pen"></i> Edit
+                    </a>
+                    <a href="index.php?del_id=<?= $topicId ?>"
+                       class="btn btn--sm btn--danger"
+                       onclick="return confirm('Topic wirklich löschen?');">
+                      <i class="fas fa-trash"></i> Delete
+                    </a>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </tbody>
         </table>
       </div><!-- /.content -->
@@ -121,8 +132,6 @@ $topics = $ctrl->index() ?? [];
 
   <!-- Vendor-Skripte -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <!-- CKEditor (falls in diesem Screen benötigt) -->
-  <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
   <!-- Projekt-JS -->
   <script src="../../assets/js/scripts.js"></script>
 </body>
