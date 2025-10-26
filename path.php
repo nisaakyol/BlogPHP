@@ -51,3 +51,16 @@ if (!defined('DB_PORT')) define('DB_PORT', getenv('DB_PORT') ?: '3306');
 if (!defined('DB_NAME')) define('DB_NAME', getenv('DB_NAME') ?: 'blog');
 if (!defined('DB_USER')) define('DB_USER', getenv('DB_USER') ?: 'bloguser');
 if (!defined('DB_PASS')) define('DB_PASS', getenv('DB_PASS') ?: 'blogpass');
+
+
+if (!defined('MAIL_HOST'))        define('MAIL_HOST', 'mail-1');   // Mailpit/SMTP Host
+if (!defined('MAIL_PORT'))        define('MAIL_PORT', 1025);          // Mailpit Port
+if (!defined('MAIL_SECURE'))      define('MAIL_SECURE', '');          // '', 'ssl' oder 'tls'
+if (!defined('MAIL_USER'))        define('MAIL_USER', '');            // leer für Mailpit
+if (!defined('MAIL_PASS'))        define('MAIL_PASS', '');            // leer für Mailpit
+if (!defined('MAIL_FROM'))        define('MAIL_FROM', 'no-reply@example.com');
+if (!defined('MAIL_FROM_NAME'))   define('MAIL_FROM_NAME', 'Blog');
+if (!defined('MAIL_TO'))          define('MAIL_TO', 'admin@example.com');
+
+// Geheimnis für signierte E-Mail-Links (lang & zufällig wählen!)
+if (!defined('EMAIL_LINK_SECRET')) define('EMAIL_LINK_SECRET', 'CHANGE-THIS-TO-A-LONG-RANDOM-STRING');

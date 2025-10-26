@@ -3,14 +3,12 @@
  * Datei: admin/posts/index.php
  * Zweck: Übersicht zur Verwaltung aller Blog-Posts (Listenansicht + Aktionen)
  *
- * - Eingeloggt erforderlich (usersOnly)
  * - Admin: Moderation (Approve/Reject)
- * - Normale User: nur eigene Posts (Edit/Delete)
  * - displayPosts.php rendert NUR <tr>…</tr>-Zeilen (keine zweite Tabelle)
  */
 
 require __DIR__ . '/../_admin_boot.php';
-usersOnly();
+adminOnly();
 
 require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
 require_once ROOT_PATH . '/app/helpers/csrf.php';
@@ -66,24 +64,21 @@ $usersById = $vm['usersById'] ?? [];
 
         <?php include ROOT_PATH . "/app/includes/messages.php"; ?>
 
-        <table class="table" style="width:100%;border-collapse:collapse;">
+        <table class="table">
           <thead>
             <tr>
-              <th style="width:60px;">SN</th>
+              <th class="col-sn">SN</th>
               <th>Title</th>
-              <th style="width:180px;">Author</th>
-              <th style="width:130px;">Status</th>
-              <th style="width:240px;">Actions</th>
+              <th>Author</th>
+              <th class="col-status">Status</th>
+              <th class="col-actions">Actions</th>
               <?php if ($isAdmin): ?>
-                <th style="width:260px;">Moderation</th>
+                <th class="col-note">Moderation</th>
               <?php endif; ?>
             </tr>
           </thead>
           <tbody>
-            <?php
-              // displayPosts.php rendert nur die <tr>-Zeilen
-              require ROOT_PATH . "/admin/posts/displayPosts.php";
-            ?>
+            <?php require ROOT_PATH . "/admin/posts/displayPosts.php"; ?>
           </tbody>
         </table>
       </div>

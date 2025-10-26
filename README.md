@@ -34,7 +34,7 @@
 prio1
 - Ordner-Struktur
 - LegacyDB weg
-- email funktion
+- eamil funktion foot
 
 prio2
 - HTML/Markdown-Eingabe für Artikeltexte

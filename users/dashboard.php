@@ -13,11 +13,19 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $userId = (int)($_SESSION['id'] ?? 0);
 $repo   = new DbRepository();
 
-// Welcher Tab?
+// --- Signierten Preview-Link-Builder (7 Tage gültig) --------------------------
+$previewLink = function (int $pid): string {
+    $secret = defined('EMAIL_LINK_SECRET') ? EMAIL_LINK_SECRET : 'dev';
+    $exp    = time() + 7*24*60*60; // 7 Tage
+    $sig    = hash_hmac('sha256', $pid . '|preview|' . $exp, $secret);
+    return BASE_URL . "/preview.php?id={$pid}&exp={$exp}&sig={$sig}";
+};
+
+// Tab-Ermittlung
 $tab = $_GET['tab'] ?? 'posts';
 if (!in_array($tab, ['posts', 'account'], true)) $tab = 'posts';
 
-// Passwort-POST hier behandeln (nur wenn account-Tab aktiv)
+// Passwort-Änderung (nur im Account-Tab verarbeiten)
 if ($tab === 'account'
     && $_SERVER['REQUEST_METHOD'] === 'POST'
     && isset($_POST['current_password'], $_POST['new_password'], $_POST['new_password_confirmation'])) {
@@ -34,7 +42,7 @@ if ($tab === 'account'
         if ($current === '' || $new === '' || $confirm === '') {
             $errors[] = 'Bitte alle Felder ausfüllen.';
         }
-        if (!password_verify($current, (string)$user['password'])) {
+        if (!password_verify($current, (string)($user['password'] ?? ''))) {
             $errors[] = 'Aktuelles Passwort ist falsch.';
         }
         if ($new !== $confirm) {
@@ -59,10 +67,12 @@ if ($tab === 'account'
     exit;
 }
 
-// Daten für Posts-Tab laden
+// Eigene Posts laden (für Posts-Tab)
 $myPosts = $repo->selectAll('posts', ['user_id' => $userId], 'created_at DESC');
 
+// Helper
 $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 function statusBadge(?string $status): string {
     $status = $status ?: 'draft';
     $map = [
@@ -91,7 +101,8 @@ unset($_SESSION['errors']);
   <title>Dein Dashboard</title>
   <style>
     .card { background:#fff; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.07); padding:18px; }
-    .table th, .table td { padding:.6rem; border-bottom:1px solid #f2f2f2; }
+    .table { width:100%; border-collapse:collapse; }
+    .table th, .table td { padding:.6rem; border-bottom:1px solid #f2f2f2; vertical-align:top; }
   </style>
 </head>
 <body>
@@ -112,55 +123,54 @@ unset($_SESSION['errors']);
 
           <div class="card">
             <h3>Deine Posts</h3>
-            <table class="table" style="width:100%;border-collapse:collapse;">
-              <thead>
-                <tr>
-                  <th style="width:60px;">#</th>
-                  <th>Title</th>
-                  <th style="width:160px;">Status</th>
-                  <th style="width:300px;">Review-Notiz</th>
-                  <th style="width:220px;">Aktionen</th>
-                </tr>
-              </thead>
-              <tbody>
-              <?php if (empty($myPosts)): ?>
-                <tr>
-                  <td colspan="5" style="padding:.75rem;opacity:.7;">
-                    Du hast noch keine Posts. Lege gleich deinen ersten Beitrag an.
-                  </td>
-                </tr>
-              <?php else: ?>
+            <table class="table">
+                <thead>
+                    <tr>
+                    <th class="col-sn">#</th>
+                    <th>Title</th>
+                    <th class="col-status">Status</th>
+                    <th class="col-note">Review-Notiz</th>
+                    <th class="col-actions">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
                 <?php foreach ($myPosts as $i => $p): ?>
-                  <tr>
+                    <?php $pid = (int)$p['id']; $status = (string)($p['status'] ?? 'draft'); ?>
+                    <tr>
                     <td><?= $i + 1 ?></td>
                     <td><?= $e($p['title'] ?? '') ?></td>
-                    <td><?= statusBadge($p['status'] ?? null) ?></td>
-                    <td>
-                      <?php
-                        $note = trim((string)($p['review_note'] ?? ''));
-                        echo $note !== '' ? nl2br($e($note)) : '<span style="opacity:.6;">—</span>';
-                      ?>
+                    <td><?= statusBadge($status) ?></td>
+                    <td class="t-cell--note">
+                        <?php $note = trim((string)($p['review_note'] ?? ''));
+                        echo $note !== '' ? nl2br($e($note)) : '<span style="opacity:.6;">—</span>'; ?>
                     </td>
-                    <td style="white-space:nowrap;">
-                      <a href="<?= BASE_URL ?>/admin/posts/edit.php?id=<?= (int)($p['id'] ?? 0) ?>"
-                         class="btn btn--sm btn--success">
-                        <i class="fas fa-pen"></i> Edit
-                      </a>
-                      <a href="<?= BASE_URL ?>/admin/posts/index.php?delete_id=<?= (int)($p['id'] ?? 0) ?>"
-                         class="btn btn--sm btn--danger"
-                         data-confirm="Wirklich löschen?">
-                        <i class="fas fa-trash"></i> Delete
-                      </a>
+                    <td class="col-actions">
+                        <div class="actions">
+                        <a href="<?= $previewLink($pid) ?>" class="btn btn--sm">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                        <a href="<?= BASE_URL ?>/admin/posts/edit.php?id=<?= $pid ?>" class="btn btn--sm btn--success">
+                            <i class="fas fa-pen"></i> Edit
+                        </a>
+                        <a href="<?= BASE_URL ?>/users/delete-post.php?id=<?= $pid ?>" class="btn btn--sm btn--danger" data-confirm="Wirklich löschen?">
+                            <i class="fas fa-trash"></i> Delete
+                        </a>
+                        <?php if (in_array($status, ['draft','rejected'], true)): ?>
+                            <a href="<?= BASE_URL ?>/users/submit.php?id=<?= $pid ?>" class="btn btn--sm"
+                            onclick="return confirm('Beitrag zur Prüfung einreichen?');">
+                            <i class="fas fa-paper-plane"></i> Einreichen
+                            </a>
+                        <?php endif; ?>
+                        </div>
                     </td>
-                  </tr>
+                    </tr>
                 <?php endforeach; ?>
-              <?php endif; ?>
-              </tbody>
-            </table>
+                </tbody>
+                </table>
           </div>
 
         <?php else: /* tab === 'account' */ ?>
-          <div class="card" style="max-width:560px;">
+          <div class="card" style="max-width:560px; margin:0 auto;">
             <h3>Passwort ändern</h3>
 
             <?php if (!empty($errors)): ?>
@@ -201,6 +211,7 @@ unset($_SESSION['errors']);
   </div>
 
   <script>
+    // Bestätigungsdialoge für Delete/Submit
     document.addEventListener('click', function (e) {
       const el = e.target.closest('[data-confirm]');
       if (!el) return;

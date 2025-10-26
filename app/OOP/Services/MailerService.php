@@ -32,7 +32,19 @@ class MailerService
         $from     = defined('MAIL_FROM') ? MAIL_FROM : ((getenv('MAIL_FROM') !== false) ? (string)getenv('MAIL_FROM') : 'no-reply@example.com');
         $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : ((getenv('MAIL_FROM_NAME') !== false) ? (string)getenv('MAIL_FROM_NAME') : 'Blog');
 
-        $body = self::formatBody($payload);
+        // Neu: HTML/ALT unterstützen (rückwärtskompatibel)
+        $hasHtml = isset($payload['html']) && is_string($payload['html']) && $payload['html'] !== '';
+        $html    = $hasHtml ? (string)$payload['html'] : '';
+        $alt     = isset($payload['alt']) && is_string($payload['alt']) ? (string)$payload['alt'] : '';
+
+        // AltBody fallback: benutze deine bisherige Formatierung
+        if ($alt === '') {
+            $alt = self::formatBody($payload);
+        }
+
+        // Wenn kein HTML übergeben wurde, verhalte dich wie vorher (Plain-Text)
+        $bodyIsHtml = $hasHtml;
+        $body       = $bodyIsHtml ? $html : $alt;
 
         // 1) Versuche PHPMailer (falls via Composer vorhanden)
         if (class_exists(\PHPMailer\PHPMailer\PHPMailer::class)) {
@@ -60,9 +72,16 @@ class MailerService
                 $mail->setFrom($from, $fromName);
                 $mail->addAddress($to);
                 $mail->Subject = $subject;
-                $mail->Body    = $body;
-                $mail->AltBody = $body;
-                $mail->isHTML(false);
+
+                if ($bodyIsHtml) {
+                    $mail->isHTML(true);         // ⟵ jetzt HTML erlauben
+                    $mail->Body    = $html;
+                    $mail->AltBody = $alt !== '' ? $alt : strip_tags($html);
+                } else {
+                    $mail->isHTML(false);
+                    $mail->Body    = $alt;
+                    $mail->AltBody = $alt;
+                }
 
                 $mail->send();
                 return true;
@@ -72,8 +91,10 @@ class MailerService
         }
 
         // 2) Fallback: native mail()
+        // Wenn HTML vorliegt, setze Content-Type entsprechend
         $headers = 'From: ' . self::encodeHeader($fromName) . " <{$from}>\r\n"
-                 . "Content-Type: text/plain; charset=UTF-8";
+                . 'Content-Type: ' . ($bodyIsHtml ? 'text/html' : 'text/plain') . '; charset=UTF-8';
+
         $ok = @mail($to, self::encodeHeader($subject), $body, $headers);
         if ($ok) {
             return true;

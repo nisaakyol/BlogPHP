@@ -10,3 +10,7 @@ if (!defined('TOP_BOOTSTRAP_LOADED')) {
         die('Autoload-Fehler: ' . htmlspecialchars($__boot, ENT_QUOTES, 'UTF-8') . ' fehlt');
     }
 }
+$vendor = ROOT_PATH . '/vendor/autoload.php';
+if (is_file($vendor)) {
+    require_once $vendor;
+}
