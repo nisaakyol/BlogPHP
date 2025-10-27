@@ -29,19 +29,18 @@
 - Rollen & Schutz: usersOnly() und adminOnly() Middleware (Admin-Flag in users.admin)
 - Benutzerverwaltung → Liste/Löschen vorhanden; fehlt: Benutzer anlegen/bearbeiten, Rollen/Zuweisungen, Passwort-Reset.
 - Bemerkungen/Notizen (interne Redaktionsnotizen pro Artikel)
+- E-Mail Funktion
 
 #ToDo
 prio1
 - Ordner-Struktur
 - LegacyDB weg
-- eamil funktion foot
 
 prio2
-- HTML/Markdown-Eingabe für Artikeltexte
 - Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)
 - RSS-Feed (z. B. /feed.xml)
 
     Teilweise umgesetzt / Lücke schließen:
     - Spam-Protection → Honeypot existiert, CAPTCHA (z. B. hCaptcha/reCAPTCHA) optional ergänzen.
-    - E-Mail-Versand (einfacher Textmailer/Service; z. B. für Kontakt)
+
 

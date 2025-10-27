@@ -100,7 +100,7 @@ require("../path.php");
 
           <!-- Nisa -->
           <article class="team-card">
-            <img src="<?php echo BASE_URL . '/assets/images/Profilbild.png'; ?>" alt="Profilbild Nisa">
+            <img src="<?php echo BASE_URL . '/assets/images/NisaProfilbild.jpeg'; ?>" alt="Profilbild Nisa">
             <div class="container">
               <h2>Nisa</h2>
               <p class="title">Teammitglied</p>
@@ -120,7 +120,7 @@ require("../path.php");
           <article class="team-card">
             <img src="<?php echo BASE_URL . '/assets/images/Profilbild.png'; ?>" alt="Profilbild Lavina">
             <div class="container">
-              <h2>Lavina</h2>
+              <h2>Lavinia</h2>
               <p class="title">Teammitglied</p>
             </div>
           </article>
