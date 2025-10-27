@@ -5,20 +5,11 @@ namespace App\OOP\Services;
 
 /**
  * MailerService
- *
- * Versand-Pipeline:
- *   1) PHPMailer via SMTP (wenn verfügbar) – ideal für Mailpit (Host "mail", Port 1025)
- *   2) Fallback: native mail()
- *   3) Fallback: error_log()
- *
- * Konfig (optional via Konstanten oder ENV):
- *   MAIL_TO, MAIL_FROM, MAIL_FROM_NAME,
- *   MAIL_HOST, MAIL_PORT, MAIL_USER, MAIL_PASS, MAIL_SECURE
  */
 class MailerService
 {
     /**
-     * Sendet eine einfache Text-Mail aus einem Key/Value-Payload.
+     * Sendet eine einfache Text-/HTML-Mail aus einem Key/Value-Payload.
      *
      * @param array       $payload Beliebige Schlüssel/Werte
      * @param string|null $to      Empfänger
@@ -32,17 +23,23 @@ class MailerService
         $from     = defined('MAIL_FROM') ? MAIL_FROM : ((getenv('MAIL_FROM') !== false) ? (string)getenv('MAIL_FROM') : 'no-reply@example.com');
         $fromName = defined('MAIL_FROM_NAME') ? MAIL_FROM_NAME : ((getenv('MAIL_FROM_NAME') !== false) ? (string)getenv('MAIL_FROM_NAME') : 'Blog');
 
-        // Neu: HTML/ALT unterstützen (rückwärtskompatibel)
+        // Optionales Reply-To aus Payload
+        $replyTo = null;
+        if (isset($payload['from_email']) && filter_var((string)$payload['from_email'], FILTER_VALIDATE_EMAIL)) {
+            $replyTo = (string)$payload['from_email'];
+        }
+
+        // HTML/ALT unterstützen (rückwärtskompatibel)
         $hasHtml = isset($payload['html']) && is_string($payload['html']) && $payload['html'] !== '';
         $html    = $hasHtml ? (string)$payload['html'] : '';
         $alt     = isset($payload['alt']) && is_string($payload['alt']) ? (string)$payload['alt'] : '';
 
-        // AltBody fallback: benutze deine bisherige Formatierung
+        // AltBody fallback: benutze bisherige Formatierung
         if ($alt === '') {
             $alt = self::formatBody($payload);
         }
 
-        // Wenn kein HTML übergeben wurde, verhalte dich wie vorher (Plain-Text)
+        // Wenn kein HTML übergeben wurde, Plain-Text wie vorher
         $bodyIsHtml = $hasHtml;
         $body       = $bodyIsHtml ? $html : $alt;
 
@@ -73,6 +70,11 @@ class MailerService
                 $mail->addAddress($to);
                 $mail->Subject = $subject;
 
+                // NEU: Reply-To, falls vorhanden
+                if ($replyTo) {
+                    $mail->addReplyTo($replyTo);
+                }
+
                 if ($bodyIsHtml) {
                     $mail->isHTML(true);         // ⟵ jetzt HTML erlauben
                     $mail->Body    = $html;
@@ -93,7 +95,11 @@ class MailerService
         // 2) Fallback: native mail()
         // Wenn HTML vorliegt, setze Content-Type entsprechend
         $headers = 'From: ' . self::encodeHeader($fromName) . " <{$from}>\r\n"
-                . 'Content-Type: ' . ($bodyIsHtml ? 'text/html' : 'text/plain') . '; charset=UTF-8';
+                 . 'Content-Type: ' . ($bodyIsHtml ? 'text/html' : 'text/plain') . '; charset=UTF-8';
+        // NEU: Reply-To-Header
+        if ($replyTo) {
+            $headers .= "\r\nReply-To: " . $replyTo;
+        }
 
         $ok = @mail($to, self::encodeHeader($subject), $body, $headers);
         if ($ok) {
@@ -123,7 +129,7 @@ class MailerService
         return self::send($payload, $to, 'Post zur Freigabe');
     }
 
-    /** Formatiert Payload zu mehrzeiligem Text. */
+    /** Formatiert Payload zu mehrzeiligem Text (leere/nicht-skalare Werte ignorieren). */
     private static function formatBody(array $payload): string
     {
         if ($payload === []) {
@@ -131,7 +137,10 @@ class MailerService
         }
         $lines = [];
         foreach ($payload as $k => $v) {
-            $lines[] = sprintf('%s: %s', (string)$k, (string)$v);
+            if (is_array($v) || is_object($v)) { continue; }   // nicht-skalare überspringen
+            $val = (string)$v;
+            if ($val === '') { continue; }                     // leere Einträge auslassen
+            $lines[] = sprintf('%s: %s', (string)$k, $val);
         }
         return implode("\n", $lines);
     }

@@ -36,8 +36,6 @@ final class PostWriteController
             'type'     => 'moderation',
             'post_id'  => $postId,
             'title'    => (string)($post['title'] ?? ''),
-            'reviewer' => $username,
-            'note'     => '', // optional
         ]);
 
         // 4) Rückmeldung an den User
