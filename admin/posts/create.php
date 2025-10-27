@@ -1,35 +1,34 @@
 <?php
 /**
- * Datei: admin/posts/edit.php
- * Zweck: Admin-Ansicht zum Bearbeiten eines bestehenden Blog-Posts
+ * Datei: admin/posts/create.php
+ * Zweck: Admin-Ansicht zum Anlegen eines neuen Blog-Posts (Formular + Verarbeitung über Controller)
  *
  * Hinweise:
- * - Zugriff nur für eingeloggte User (usersOnly()).
- * - Admins können direkt veröffentlichen; normale User setzen ein Freigabe-Flag.
- * - Controller kapselt die Verarbeitung (Lesen, Validieren, Speichern).
+ * - Zugriff nur für eingeloggte User (usersOnly()) – Admins dürfen direkt veröffentlichen.
+ * - Controller kapselt Business-Logik; View kümmert sich um Darstellung/Validierungsausgaben.
+ * - Bei Formular-Reposts werden Eingaben wieder befüllt (Value-Persistenz).
  */
 
-require __DIR__ . '/../_admin_boot.php'; // Bootstrap (Session, Konstanten, Guards)
-usersOnly();                              // Zugriffsschutz
+require __DIR__ . '/../_admin_boot.php'; // Bootstrap für Admin-Bereich (Session, Consts, Guards)
+usersOnly();                              // Zugriffsschutz: nur eingeloggte Benutzer
 
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php'; // Autoload/Bootstrap für OOP-Teil
+require_once ROOT_PATH . '/app/includes/bootstrap.php';// Autoloader/DI etc. für OOP-Teil
 
 use App\OOP\Controllers\Admin\AdminPostController;
 use App\OOP\Repositories\DbRepository;
 
 /**
- * Request an Controller übergeben.
- * handleEdit($_GET, $_POST, $_FILES) liefert ein ViewModel (Array) mit u. a.:
- * - errors[]   : Validierungsfehler
- * - id, title, body, topic_id, published
- * - topics[]   : Für das <select> der Kategorien
+ * Controller aufbauen und Request verarbeiten.
+ * handleCreate() gibt ein ViewModel (Array) zurück mit Keys:
+ * - errors[]: Validierungsfehler
+ * - title, body, topic_id, published: zuletzt gepostete Werte (Re-Rendering)
+ * - topics[]: Liste der verfügbaren Topics für das <select>
  */
 $ctrl = new AdminPostController(new DbRepository());
-$vm   = $ctrl->handleEdit($_GET, $_POST, $_FILES);
+$vm   = $ctrl->handleCreate($_POST, $_FILES);
 
 // ViewModel entpacken (mit Defaults)
 $errors    = $vm['errors']    ?? [];
-$id        = $vm['id']        ?? '';
 $title     = $vm['title']     ?? '';
 $body      = $vm['body']      ?? '';
 $topic_id  = $vm['topic_id']  ?? '';
@@ -40,46 +39,39 @@ $topics    = $vm['topics']    ?? [];
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <!-- Basis-Styles: öffentlich + Admin -->
+  <!-- Basis-Styles: öffentliches Styling + Admin-spezifisches Styling -->
   <link rel="stylesheet" href="../../assets/css/style.css">
   <link rel="stylesheet" href="../../assets/css/admin.css">
-  <title>Admin Section – Edit Post</title>
+  <title>Admin Section – Add Post</title>
 </head>
 <body>
-  <!-- Fester Admin-Header -->
+  <!-- Fester Admin-Header (Navi, Usermenü) -->
   <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
-    <!-- Linke Admin-Sidebar -->
+    <!-- Linke Admin-Sidebar (Navigation) -->
     <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
 
     <div class="admin-content">
-      <!-- Schnellzugriff -->
+      <!-- Schnellzugriff: Post anlegen / verwalten -->
       <div class="button-group">
         <a href="create.php" class="btn btn-big">Add Post</a>
-        <a href="index.php"  class="btn btn-big">Manage Posts</a>
+        <a href="index.php" class="btn btn-big">Manage Posts</a>
       </div>
 
       <div class="content">
-        <h2 class="page-title">Edit Posts</h2>
+        <h2 class="page-title">Create Posts</h2>
 
-        <!-- Validierungsfehler -->
+        <!-- Validierungsfehler (einheitliches Partial) -->
         <?php include ROOT_PATH . "/app/helpers/formErrors.php"; ?>
 
         <!--
-          Formular zum Bearbeiten des Posts
-          - enctype="multipart/form-data" für optionalen Bild-Upload
-          - id wird als Hidden-Field mitgegeben
-          - Hinweis: Für Produktion CSRF-Token ergänzen
+          Formular zum Erstellen eines Posts
+          - enctype="multipart/form-data" für Bild-Upload
+          - action zeigt auf create.php (dieselbe Seite, PRG-Pattern wird im Controller gehandhabt)
+          - Hinweis: Für echte Produktivnutzung CSRF-Token ergänzen
         -->
-        <form action="edit.php" method="post" enctype="multipart/form-data">
-          <!-- Post-ID (hidden) -->
-          <input
-            type="hidden"
-            name="id"
-            value="<?php echo (int)$id; ?>"
-          >
-
+        <form action="create.php" method="post" enctype="multipart/form-data">
           <!-- Titel -->
           <div>
             <label for="title">Title</label>
@@ -92,7 +84,7 @@ $topics    = $vm['topics']    ?? [];
             >
           </div>
 
-          <!-- Inhalt -->
+          <!-- Body / Inhalt -->
           <div>
             <label for="body">Body</label>
             <textarea
@@ -101,40 +93,29 @@ $topics    = $vm['topics']    ?? [];
             ><?php echo htmlspecialchars($body, ENT_QUOTES, 'UTF-8'); ?></textarea>
           </div>
 
-          <!-- Bild-Upload (optional: neues Titelbild) -->
+          <!-- Bild-Upload -->
           <div>
             <label for="image">Image</label>
-            <input
-              type="file"
-              id="image"
-              name="image"
-              class="text-input"
-            >
+            <input type="file" id="image" name="image" class="text-input">
           </div>
 
           <!-- Topic-Auswahl -->
           <div>
             <label for="topic_id">Topic</label>
-            <select
-              id="topic_id"
-              name="topic_id"
-              class="text-input"
-            >
+            <select id="topic_id" name="topic_id" class="text-input">
               <option value=""></option>
               <?php foreach ($topics as $topic): ?>
-                <?php
-                  $optId   = (int)($topic['id'] ?? 0);
-                  $optName = (string)($topic['name'] ?? '');
-                  $selected = (!empty($topic_id) && (int)$topic_id === $optId) ? 'selected' : '';
-                ?>
-                <option value="<?php echo $optId; ?>" <?php echo $selected; ?>>
-                  <?php echo htmlspecialchars($optName, ENT_QUOTES, 'UTF-8'); ?>
+                <option
+                  value="<?php echo (int)$topic['id']; ?>"
+                  <?php echo (!empty($topic_id) && (int)$topic_id === (int)$topic['id']) ? 'selected' : ''; ?>
+                >
+                  <?php echo htmlspecialchars($topic['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                 </option>
               <?php endforeach; ?>
             </select>
           </div>
 
-          <!-- Publish-Option (Admin direkt, sonst Freigabe) -->
+          <!-- Publish-Option (Admin darf direkt veröffentlichen; sonst Flag für Freigabe) -->
           <div>
             <?php if (!empty($_SESSION['admin'])): ?>
               <label>
@@ -159,7 +140,7 @@ $topics    = $vm['topics']    ?? [];
 
           <!-- Absenden -->
           <div>
-            <button type="submit" name="update-post" class="btn btn-big">Update Post</button>
+            <button type="submit" name="add-post" class="btn btn-big">Add Post</button>
           </div>
         </form>
       </div><!-- /.content -->
@@ -168,7 +149,7 @@ $topics    = $vm['topics']    ?? [];
 
   <!-- Vendor-Skripte -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <!-- CKEditor -->
+  <!-- CKEditor (klassisch) -->
   <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
   <!-- Projekt-JS -->
   <script src="../../assets/js/scripts.js"></script>

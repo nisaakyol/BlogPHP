@@ -1,7 +1,6 @@
 <?php
 require 'path.php'; // Lädt Projektpfade/URLs (z. B. ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php'; // Autoload/Bootstrap der OOP-Schicht (Namespaces, Services, Repos)
-require_once ROOT_PATH . '/app/database/connect.php'; // stellt $conn für LegacyDB sicher
+require_once ROOT_PATH . '/app/includes/bootstrap.php'; // Autoload/Bootstrap der OOP-Schicht (Namespaces, Services, Repos)
 
 use App\OOP\Repositories\DbRepository; // OOP-Repository mit DB-Methoden (selectAll, getPublishedPosts, ...)
 
@@ -41,7 +40,7 @@ if (isset($_GET['t_id'])) {
   <!-- Webfonts -->
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
   <!-- Projekt-CSS -->
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/style.css">
   <title>Blog</title>
 </head>
 <body>
@@ -144,6 +143,6 @@ if (isset($_GET['t_id'])) {
   <!-- JS: jQuery, Slider, Projekt-Skripte -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-  <script src="assets/js/scripts.js"></script>
+  <script src="<?php echo BASE_URL; ?>/assets/js/scripts.js"></script>
 </body>
 </html>

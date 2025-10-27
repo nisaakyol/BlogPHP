@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/../path.php';
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 require_once ROOT_PATH . '/app/helpers/middleware.php';
 
 use App\OOP\Repositories\DbRepository;

@@ -14,7 +14,7 @@ if (!defined('ROOT_PATH')) {
         }
     }
 }
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 require_once ROOT_PATH . '/app/helpers/send-email.php';
 
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();

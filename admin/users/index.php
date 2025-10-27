@@ -11,7 +11,7 @@
 require __DIR__ . '/../_admin_boot.php';
 adminOnly(); // oder usersOnly(), falls gewünscht
 
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 
 use App\OOP\Controllers\Admin\AdminUserController;
 use App\OOP\Repositories\DbRepository;
@@ -57,12 +57,12 @@ $admin_users = $vm['admin_users'] ?? [];
 </head>
 <body>
   <!-- Admin-Header -->
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <!-- Seiten-Wrapper -->
   <div class="admin-wrapper">
     <!-- Linke Sidebar -->
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <!-- Hauptinhalt -->
     <div class="admin-content">

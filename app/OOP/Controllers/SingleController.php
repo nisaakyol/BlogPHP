@@ -3,17 +3,23 @@ declare(strict_types=1);
 
 namespace App\OOP\Controllers;
 
+use App\OOP\Core\DB;
+use App\OOP\Repositories\DbRepository;
+
 /**
  * SingleController
  *
  * Lädt ein einzelnes Posting für single.php:
- * - Topics via Legacy-Helfer (selectAll), falls vorhanden.
- * - Post via selectOne; falls username fehlt, wird per Join nachgeladen.
- * - Fallback: manuelles JOIN über executeQuery().
+ * - Topics via DbRepository (OOP).
+ * - Post via PDO mit JOIN auf users (und optional topics).
+ * - Kein executeQuery()/mysqli mehr.
  */
 class SingleController
 {
-    public array $post   = [];
+    /** @var array<string,mixed> */
+    public array $post = [];
+
+    /** @var array<int,array<string,mixed>> */
     public array $topics = [];
 
     /**
@@ -21,62 +27,48 @@ class SingleController
      */
     public function boot(): void
     {
-        // Topics wie gewohnt (Legacy-Helfer, wenn vorhanden)
-        $this->topics = function_exists('selectAll') ? selectAll('topics') : [];
+        // Topics OOP-basiert laden
+        $repo = new DbRepository();
+        $this->topics = $repo->selectAll('topics', [], 'name ASC');
 
-        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+        // Post-ID aus Request
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id <= 0) {
             $this->post = [];
             return;
         }
 
-        // Falls Legacy-Helfer existieren: nutze sie
-        if (function_exists('selectOne')) {
-            // username wird in vielen Templates benötigt; wenn nicht vorhanden, via JOIN laden
-            $p = selectOne('posts', ['id' => $id]);
-            if ($p && empty($p['username'])) {
-                $p = $this->loadWithUsernameJoin($id);
-            }
-            $this->post = $p ?: [];
-            return;
-        }
-
-        // Letzter Fallback: manuelles JOIN
-        $this->post = $this->loadWithUsernameJoin($id) ?: [];
+        // Post inkl. username (und topic_name) via PDO laden
+        $this->post = $this->loadPostWithJoinPDO($id) ?? [];
     }
 
     /**
-     * Lädt einen Post inkl. Username via JOIN (Legacy executeQuery).
+     * Lädt einen Post inkl. Username (und Topic-Name) via PDO-JOIN.
      *
      * @param int $id
-     * @return array|null
+     * @return array<string,mixed>|null
      */
-    private function loadWithUsernameJoin(int $id): ?array
+    private function loadPostWithJoinPDO(int $id): ?array
     {
-        // nutzt die Legacy-DB-Funktion executeQuery
-        if (!function_exists('executeQuery')) {
-            return null;
-        }
+        $pdo = DB::pdo();
 
-        $sql = "SELECT p.*, u.username
-                  FROM posts p
-                  LEFT JOIN users u ON u.id = p.user_id
-                 WHERE p.id = ?
-                 LIMIT 1";
+        $sql = <<<SQL
+        SELECT
+            p.*,
+            u.username,
+            t.name AS topic_name
+        FROM posts p
+        LEFT JOIN users  u ON u.id = p.user_id
+        LEFT JOIN topics t ON t.id = p.topic_id
+        WHERE p.id = :id AND p.published = 1
+        LIMIT 1
+        SQL;
 
-        // Hinweis: executeQuery liefert hier typischerweise ein mysqli_stmt
-        $st = executeQuery($sql, ['id' => $id]);
-        if (!is_object($st)) {
-            return null;
-        }
+        $st = $pdo->prepare($sql);
+        $st->execute([':id' => $id]);
 
-        $res = $st->get_result();
-        if (!is_object($res)) {
-            return null;
-        }
-
-        /** @var array<string, mixed>|null $row */
-        $row = $res->fetch_assoc() ?: null;
-        return $row ?: null;
+        /** @var array<string,mixed>|false $row */
+        $row = $st->fetch();
+        return $row !== false ? $row : null;
     }
 }

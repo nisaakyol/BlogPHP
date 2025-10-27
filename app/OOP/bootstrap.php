@@ -79,13 +79,4 @@ if (!defined('TOP_BOOTSTRAP_LOADED')) {
     }
 }
 
-// ---------------------------------------------------------------------------
-// Legacy mysqli-Verbindung verfügbar machen (falls noch nicht vorhanden)
-// Erwartet: ROOT_PATH ist gesetzt (z. B. via path.php)
-// ---------------------------------------------------------------------------
-if (!isset($GLOBALS['conn']) || !($GLOBALS['conn'] instanceof mysqli)) {
-    $__connect = ROOT_PATH . '/app/database/connect.php';
-    if (is_file($__connect)) {
-        require_once $__connect;
-    }
-}
+

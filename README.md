@@ -34,7 +34,6 @@
 #ToDo
 prio1
 - Ordner-Struktur
-- LegacyDB weg
 
 prio2
 - Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)

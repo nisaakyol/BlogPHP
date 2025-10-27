@@ -10,7 +10,7 @@
 require __DIR__ . '/../_admin_boot.php';
 adminOnly();
 
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 require_once ROOT_PATH . '/app/helpers/csrf.php';
 
 use App\OOP\Controllers\Admin\AdminPostController;
@@ -48,10 +48,10 @@ $usersById = $vm['usersById'] ?? [];
   <title>Admin – Manage Posts</title>
 </head>
 <body>
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <div class="admin-content">
       <div class="button-group">

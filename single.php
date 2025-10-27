@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require 'path.php';                                              // Pfade/URLs (ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';     // OOP-Autoloader, Session, Helpers
+require_once ROOT_PATH . '/app/includes/bootstrap.php';     // OOP-Autoloader, Session, Helpers
 
 use App\OOP\Repositories\DbRepository;
 use App\OOP\Controllers\PostReadController;

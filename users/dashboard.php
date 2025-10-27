@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../path.php';
 require_once ROOT_PATH . '/app/helpers/middleware.php';
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 
 use App\OOP\Repositories\DbRepository;
 
@@ -106,10 +106,10 @@ unset($_SESSION['errors']);
   </style>
 </head>
 <body>
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <div class="admin-content">
       <div class="content">

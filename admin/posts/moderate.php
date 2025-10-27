@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../_admin_boot.php';
-require_once ROOT_PATH . '/app/includes/bootstrap_once.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 require_once ROOT_PATH . '/app/helpers/middleware.php';
 require_once ROOT_PATH . '/app/helpers/csrf.php';
 
