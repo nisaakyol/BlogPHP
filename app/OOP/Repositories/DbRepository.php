@@ -396,5 +396,48 @@ final class DbRepository
         return (int)$this->pdo->lastInsertId();
     }
 
+    public function createCommentGuest(int $postId, string $username, string $text, ?int $parentId = null): int
+    {
+        // Welche Spalten existieren?
+        $hasParent = $this->columnExists('comments', 'parent_id');
 
+        // Autor-Spalte robust ermitteln (dein Schema hat i.d.R. "username")
+        $authorCol = null;
+        foreach (['username', 'name', 'author'] as $c) {
+            if ($this->columnExists('comments', $c)) { $authorCol = $c; break; }
+        }
+
+        // Zeitstempelspalte ermitteln (falls vorhanden)
+        $tsCol = null;
+        foreach (['created_at', 'created', 'timestamp', 'date'] as $c) {
+            if ($this->columnExists('comments', $c)) { $tsCol = $c; break; }
+        }
+
+        // Mindestdaten
+        $data = [
+            'post_id' => $postId,
+            'comment' => $text,
+        ];
+        if ($authorCol)               $data[$authorCol] = $username;
+        if ($hasParent && $parentId)  $data['parent_id'] = $parentId;
+
+        // Spalten + Platzhalter bauen
+        $cols  = array_keys($data);
+        $place = array_map(fn($c) => ':' . $c, $cols);
+
+        // optionalen Zeitstempel via NOW()
+        if ($tsCol) {
+            $cols[]  = $tsCol;
+            $place[] = 'NOW()';
+        }
+
+        $sql = 'INSERT INTO comments (' . implode(',', $cols) . ') VALUES (' . implode(',', $place) . ')';
+        $st  = $this->pdo->prepare($sql);
+
+        // Nur benannte Parameter binden (NOW() hat keinen)
+        $params = array_intersect_key($data, array_flip(array_filter($cols, fn($c) => $c !== $tsCol)));
+        $st->execute($params);
+
+        return (int)$this->pdo->lastInsertId();
+    }
 }

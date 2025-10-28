@@ -30,16 +30,18 @@
 - Benutzerverwaltung → Liste/Löschen vorhanden; fehlt: Benutzer anlegen/bearbeiten, Rollen/Zuweisungen, Passwort-Reset.
 - Bemerkungen/Notizen (interne Redaktionsnotizen pro Artikel)
 - E-Mail Funktion
+- Kommentare durch Besucher ermöglichen mit hilfe von cookies
+- Spam-Protection
 
 #ToDo
-prio1
-- Ordner-Struktur
 
-prio2
+- Ordner-Struktur
+- Kommentare
+
+
 - Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)
 - RSS-Feed (z. B. /feed.xml)
-
-    Teilweise umgesetzt / Lücke schließen:
-    - Spam-Protection → Honeypot existiert, CAPTCHA (z. B. hCaptcha/reCAPTCHA) optional ergänzen.
+- capture
+- barrierefreiheit
 
 

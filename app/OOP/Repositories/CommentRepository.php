@@ -4,45 +4,87 @@ declare(strict_types=1);
 namespace App\OOP\Repositories;
 
 use App\OOP\Core\DB;
-use PDOStatement;
+use PDO;
 
 /**
  * CommentRepository
  *
- * Schreibt Kommentare zur Datenbank. parent_id kann NULL sein (Threading).
+ * Verwaltet das Schreiben/Lesen von Kommentaren.
+ * Kompatibel zu Tabelle:
+ *   comments(id, parent_id, post_id, username, comment, created_at)
  */
-class CommentRepository
+final class CommentRepository
 {
-    /**
-     * Legt einen Kommentar an. $parentId darf null sein.
-     *
-     * @param string   $username  Anzeigename des Kommentierenden
-     * @param string   $comment   Kommentartext
-     * @param int|null $parentId  Eltern-Kommentar-ID oder null (Root-Kommentar)
-     * @param int      $postId    Ziel-Post-ID
-     *
-     * @return bool true bei Erfolg, sonst false
-     */
-    public static function create(string $username, string $comment, ?int $parentId, int $postId): bool
+    private \PDO $pdo;
+
+    public function __construct(?\PDO $pdo = null)
     {
-        $sql = 'INSERT INTO comments (username, comment, parent_id, post_id)
-                VALUES (:u, :c, :pid, :post)';
+        $this->pdo = $pdo ?? DB::pdo();
+    }
 
-        $st = DB::pdo()->prepare($sql);
+    /**
+     * Legt einen Kommentar für GÄSTE an (kein user_id-Feld in der Tabelle).
+     *
+     * @param int        $postId
+     * @param string     $username  Anzeigename (Pflicht bei Gästen)
+     * @param string     $comment   Kommentartext
+     * @param int|null   $parentId  Eltern-Kommentar-ID oder null (Root)
+     *
+     * @return int  Neue Kommentar-ID
+     */
+    public function createGuest(int $postId, string $username, string $comment, ?int $parentId = null): int
+    {
+        $sql = "INSERT INTO comments (parent_id, post_id, username, comment, created_at)
+                VALUES (:pid, :post, :u, :c, NOW())";
 
-        return $st->execute([
+        $st = $this->pdo->prepare($sql);
+        $st->execute([
+            ':pid'  => $parentId,
+            ':post' => $postId,
             ':u'    => $username,
             ':c'    => $comment,
-            ':pid'  => $parentId, // PDO setzt NULL korrekt
-            ':post' => $postId,
         ]);
-    }
-    public function listByAuthor(int $userId): array {
-    return $this->db->query("SELECT * FROM posts WHERE user_id = {$userId} ORDER BY created_at DESC")->fetchAll();
+
+        return (int)$this->pdo->lastInsertId();
     }
 
-    public function listCommentsByUser(int $userId): array {
-        return $this->db->query("SELECT * FROM comments WHERE user_id = {$userId} ORDER BY created_at DESC")->fetchAll();
+    /**
+     * OPTIONAL: Für eingeloggte User – wenn du den Namen aus Session verwendest,
+     * kannst du diese Methode ebenfalls nutzen (gleiches Schema).
+     * Sie ist semantisch identisch zu createGuest, dient nur der Klarheit.
+     */
+    public function createForUser(int $postId, string $username, string $comment, ?int $parentId = null): int
+    {
+        $sql = "INSERT INTO comments (parent_id, post_id, username, comment, created_at)
+                VALUES (:pid, :post, :u, :c, NOW())";
+
+        $st = $this->pdo->prepare($sql);
+        $st->execute([
+            ':pid'  => $parentId,
+            ':post' => $postId,
+            ':u'    => $username,
+            ':c'    => $comment,
+        ]);
+
+        return (int)$this->pdo->lastInsertId();
     }
 
+    /**
+     * Kommentare eines Posts laden (inkl. Replies), ohne Status-Filter
+     * (es gibt keine status-Spalte im aktuellen Schema).
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findByPost(int $postId): array
+    {
+        $sql = "SELECT id, parent_id, post_id, username, comment, created_at
+                FROM comments
+                WHERE post_id = :post
+                ORDER BY created_at ASC, id ASC";
+
+        $st = $this->pdo->prepare($sql);
+        $st->execute([':post' => $postId]);
+
+        return $st->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

@@ -15,42 +15,99 @@ final class CommentController
      */
     public function store(array $data): void
     {
-        if (empty($_SESSION['id'])) {
-            $_SESSION['message'] = 'Bitte einloggen, um zu kommentieren.';
-            $_SESSION['type']    = 'error';
-            header('Location: ' . BASE_URL . '/login.php');
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
             exit;
         }
+        if (session_status() === PHP_SESSION_NONE) session_start();
+
+        // CSRF
+        require_once ROOT_PATH . '/app/helpers/csrf.php';
+        csrf_validate_or_die($data['csrf_token'] ?? '');
+
+        // Honeypot (Simple Bot-Falle)
+        $hp = trim((string)($data['hp_name'] ?? ''));
+        if ($hp !== '') { http_response_code(204); exit; }
 
         $postId   = (int)($data['post_id'] ?? 0);
         $parentId = isset($data['parent_id']) && $data['parent_id'] !== '' ? (int)$data['parent_id'] : null;
         $comment  = trim((string)($data['comment'] ?? ''));
 
-        if ($postId <= 0 || $comment === '') {
-            $_SESSION['message'] = 'Kommentar darf nicht leer sein.';
+        $errors = [];
+        if ($postId <= 0)                      $errors[] = 'Ungültiger Beitrag.';
+        if ($comment === '' || mb_strlen($comment) < 3)
+                                            $errors[] = 'Kommentar ist zu kurz.';
+
+        $isLoggedIn = !empty($_SESSION['id']);
+        $username   = '';
+
+        if ($isLoggedIn) {
+            $username = (string)($_SESSION['username'] ?? 'User');
+        } else {
+            // Gast: Name Pflicht
+            $username    = trim((string)($data['author_name'] ?? ''));
+            if ($username === '' || mb_strlen($username) < 2)
+                $errors[] = 'Bitte gib einen Namen an.';
+        }
+
+        // simples Session-Rate-Limit
+        $now  = time();
+        $last = (int)($_SESSION['last_comment_ts'] ?? 0);
+        if ($now - $last < 20) $errors[] = 'Bitte warte kurz vor dem nächsten Kommentar.';
+        $_SESSION['last_comment_ts'] = $now;
+
+        if ($errors) {
+            $_SESSION['message'] = implode(' ', $errors);
             $_SESSION['type']    = 'error';
-            header('Location: ' . BASE_URL . '/single.php?id=' . max(0, $postId));
+            header('Location: ' . BASE_URL . '/single.php?id=' . max(0, $postId) . '#comments');
             exit;
         }
 
-        $userId = (int)$_SESSION['id'];
+        // Speichern – je nach Login-Status
+        if ($isLoggedIn) {
+            // Bestehende Logik für eingeloggte (falls createComment bisher userId annimmt)
+            $userId = (int)$_SESSION['id'];
 
-        // ⬇️ DEBUG: direkt VOR dem Repo-Aufruf einfügen
-        if (!method_exists($this->repo, 'createComment')) {
-            throw new \RuntimeException(
-                'Repo loaded: ' . get_class($this->repo)
-                . ' | methods: ' . implode(',', get_class_methods($this->repo))
-            );
+            // Safety: wenn Methode fehlt, Debug-Hinweis
+            if (!method_exists($this->repo, 'createComment')) {
+                throw new \RuntimeException(
+                    'Repo loaded: ' . get_class($this->repo)
+                    . ' | methods: ' . implode(',', get_class_methods($this->repo))
+                );
+            }
+            $id = $this->repo->createComment($postId, $userId, $comment, $parentId);
+
+        } else {
+            // Gäste: in deiner DB gibt es 'username' (kein user_id) → eigene Repo-Methode
+            if (method_exists($this->repo, 'createCommentGuest')) {
+                $id = $this->repo->createCommentGuest($postId, $username, $comment, $parentId);
+            } else {
+                // Fallback: Wenn du createComment erweitern würdest (z. B. userId=null, username als 5. Param)
+                // dann hier anpassen. Bis dahin: sauberer Hinweis.
+                throw new \RuntimeException(
+                    'Bitte DbRepository::createCommentGuest($postId, $username, $comment, $parentId) implementieren.'
+                );
+            }
+
+            // Cookie „merken“
+            require_once ROOT_PATH . '/app/helpers/cookies.php';
+            if (!empty($data['remember_author'])) {
+                $payload = json_encode(['name' => $username], JSON_UNESCAPED_UNICODE);
+                set_cookie_safe('comment_author', $payload, 60 * 60 * 24 * 180); // 180 Tage
+            } else {
+                set_cookie_safe('comment_author', '', -3600);
+            }
         }
 
-        // ursprünglicher Aufruf
-        $id = $this->repo->createComment($postId, $userId, $comment, $parentId);
-
-        $_SESSION['message'] = 'Kommentar gespeichert.';
+        $_SESSION['message'] = $isLoggedIn
+            ? 'Kommentar gespeichert.'
+            : 'Danke! Dein Kommentar ist sichtbar.';
         $_SESSION['type']    = 'success';
-        header('Location: ' . BASE_URL . '/single.php?id=' . $postId . '#comment-' . $id);
+
+        header('Location: ' . BASE_URL . '/single.php?id=' . $postId . '#comment-' . (int)$id);
         exit;
     }
+
 
     /**
      * Baut einen Kommentarbaum (parent/children) aus allen

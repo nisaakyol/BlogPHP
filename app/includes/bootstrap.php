@@ -1,5 +1,7 @@
 <?php
 // Lädt den OOP-Autoloader genau einmal – IMMER mit /app/OOP/bootstrap.php
+require_once ROOT_PATH . '/app/helpers/csrf.php';
+
 $__root = defined('ROOT_PATH') ? ROOT_PATH : realpath(__DIR__ . '/..'); // -> Projekt-Root
 $__boot = $__root . '/app/OOP/bootstrap.php';
 if (!defined('TOP_BOOTSTRAP_LOADED')) {

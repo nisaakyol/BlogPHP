@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require 'path.php';                                              // Pfade/URLs (ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/includes/bootstrap.php';     // OOP-Autoloader, Session, Helpers
+require_once ROOT_PATH . '/app/includes/bootstrap.php';          // OOP-Autoloader, Session, Helpers
 
 use App\OOP\Repositories\DbRepository;
 use App\OOP\Controllers\PostReadController;
@@ -11,9 +11,9 @@ use App\OOP\Controllers\CommentController;
 // ---------------------------------------------------
 // Kommentar absenden (Form postet auf dieselbe Seite)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
-    // Der CommentController validiert zusätzlich (usersOnly, etc.)
-    (new CommentController(new DbRepository()))->store($_POST); // macht Redirect
-    exit; // safety (sollte durch Redirect ohnehin nicht erreicht werden)
+    // Der CommentController validiert zusätzlich (CSRF, Honeypot, etc.) und macht Redirect
+    (new CommentController(new DbRepository()))->store($_POST);
+    exit; // Safety
 }
 // ---------------------------------------------------
 
@@ -34,11 +34,27 @@ $topics   = $vm['topics'] ?? []; // Topics
 // Helper für Legacy-Funktion display_comments() bereitstellen
 require_once ROOT_PATH . '/app/helpers/comments.php';
 
+// weitere Helper (CSRF + Cookies)
+require_once ROOT_PATH . '/app/helpers/csrf.php';
+require_once ROOT_PATH . '/app/helpers/cookies.php';
+
 // kleine Helper
 $isLoggedIn = function (): bool {
     return !empty($_SESSION['id']);
 };
 $currentUsername = $_SESSION['username'] ?? 'user';
+
+// Cookie-Prefill nur für Gäste
+$prefillName = '';
+if (!$isLoggedIn()) {
+    $cookie = get_cookie('comment_author');
+    if ($cookie) {
+        $d = json_decode($cookie, true);
+        if (is_array($d)) {
+            $prefillName = htmlspecialchars((string)($d['name'] ?? ''), ENT_QUOTES, 'UTF-8');
+        }
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -58,6 +74,10 @@ $currentUsername = $_SESSION['username'] ?? 'user';
         .comment-section .form-group { margin: .75rem 0; }
         .comment-section .btn-submit { padding: .5rem 1rem; }
         .muted { color:#666; font-size:.95rem; }
+        .flash { padding:.5rem .75rem; border-radius:.25rem; margin:.5rem 0; }
+        .flash.success { background:#e6ffed; border:1px solid #a7f3d0; }
+        .flash.error   { background:#fee2e2; border:1px solid #fecaca; }
+        .comment-form small { display:block; color:#666; }
     </style>
 </head>
 <body>
@@ -88,29 +108,57 @@ $currentUsername = $_SESSION['username'] ?? 'user';
 
                 <!-- Comments -->
                 <section class="comment-section" id="comments">
-                    <?php display_comments((int)$post['id']); ?>
+                    <?php
+                    // Flash-Messages vom Controller (optional)
+                    if (!empty($_SESSION['message'])) {
+                        $type = $_SESSION['type'] ?? 'success';
+                        echo '<div class="flash '.$type.'">'.htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8').'</div>';
+                        unset($_SESSION['message'], $_SESSION['type']);
+                    }
+
+                    // Vorhandene Kommentare ausgeben (deine Helper-Funktion)
+                    display_comments((int)$post['id']);
+                    ?>
 
                     <h3 class="comment-title">Kommentar hinzufügen</h3>
 
-                    <?php if ($isLoggedIn()): ?>
-                        <form id="comment-form" action="single.php?id=<?= (int)$post['id']; ?>" method="post">
-                            <input type="hidden" name="parent_id" id="parent_id" value="">
-                            <input type="hidden" name="post_id"  id="post_id"  value="<?= (int)$post['id']; ?>">
-                            <!-- Username NICHT editierbar: nur anzeigen, Wert kommt im Controller aus der Session -->
+                    <form id="comment-form" action="single.php?id=<?= (int)$post['id']; ?>" method="post" class="comment-form">
+                        <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
+                        <input type="hidden" name="parent_id" id="parent_id" value="">
+                        <input type="hidden" name="post_id"  id="post_id"  value="<?= (int)$post['id']; ?>">
+
+                        <!-- Honeypot: nicht per display:none verstecken -->
+                        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
+                            <label>Dein Name (frei lassen)</label>
+                            <input type="text" name="hp_name" autocomplete="off" tabindex="-1">
+                        </div>
+
+                        <?php if ($isLoggedIn()): ?>
+                            <!-- Eingeloggt: Username anzeigen, Feld nicht editierbar -->
                             <p class="muted">Eingeloggt als <strong><?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8'); ?></strong></p>
-
+                        <?php else: ?>
+                            <!-- Gäste: Name Pflicht, E-Mail optional + Merken-Checkbox -->
                             <div class="form-group">
-                                <label for="comment">Kommentar:</label><br>
-                                <textarea id="comment" name="comment" rows="4" cols="50" required class="form-textarea"></textarea>
+                                <label for="author_name">Name</label><br>
+                                <input id="author_name" name="author_name" type="text" value="<?= $prefillName ?>" required>
                             </div>
-
                             <div class="form-group">
-                                <input type="submit" value="Senden" class="btn-submit">
+                                <label>
+                                    <input type="checkbox" name="remember_author" value="1" <?= ($prefillName||$prefillEmail)?'checked':''; ?>>
+                                    Name merken 
+                                </label>
                             </div>
-                        </form>
-                    <?php else: ?>
-                        <p>Bitte <a href="<?= BASE_URL ?>/login.php">einloggen</a>, um einen Kommentar zu schreiben.</p>
-                    <?php endif; ?>
+                        <?php endif; ?>
+
+                        <div class="form-group">
+                            <label for="comment">Kommentar*</label><br>
+                            <textarea id="comment" name="comment" rows="4" cols="50" required class="form-textarea"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <input type="submit" value="Senden" class="btn-submit">
+                        </div>
+                    </form>
                 </section>
             </div>
 
