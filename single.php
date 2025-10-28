@@ -11,7 +11,7 @@ use App\OOP\Controllers\CommentController;
 // ---------------------------------------------------
 // Kommentar absenden (Form postet auf dieselbe Seite)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['comment'])) {
-    // Der CommentController validiert zusätzlich (CSRF, Honeypot, etc.) und macht Redirect
+    // Der CommentController validiert zusätzlich (CSRF, Honeypot, reCAPTCHA, etc.) und macht Redirect
     (new CommentController(new DbRepository()))->store($_POST);
     exit; // Safety
 }
@@ -44,7 +44,7 @@ $isLoggedIn = function (): bool {
 };
 $currentUsername = $_SESSION['username'] ?? 'user';
 
-// Cookie-Prefill nur für Gäste
+// Cookie-Prefill nur für Gäste (nur Name)
 $prefillName = '';
 if (!$isLoggedIn()) {
     $cookie = get_cookie('comment_author');
@@ -55,6 +55,9 @@ if (!$isLoggedIn()) {
         }
     }
 }
+
+// reCAPTCHA v3 Site-Key aus ENV (aus path.php)
+$recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -78,6 +81,9 @@ if (!$isLoggedIn()) {
         .flash.success { background:#e6ffed; border:1px solid #a7f3d0; }
         .flash.error   { background:#fee2e2; border:1px solid #fecaca; }
         .comment-form small { display:block; color:#666; }
+        #sending-status { display:none; margin-left:10px; color:#666; font-style:italic; }
+        @keyframes blink { 0%,50%,100%{opacity:1} 25%,75%{opacity:.5} }
+        #sending-status.blink { animation: blink 1.5s linear infinite; }
     </style>
 </head>
 <body>
@@ -109,43 +115,44 @@ if (!$isLoggedIn()) {
                 <!-- Comments -->
                 <section class="comment-section" id="comments">
                     <?php
-                    // Flash-Messages vom Controller (optional)
                     if (!empty($_SESSION['message'])) {
                         $type = $_SESSION['type'] ?? 'success';
                         echo '<div class="flash '.$type.'">'.htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8').'</div>';
                         unset($_SESSION['message'], $_SESSION['type']);
                     }
 
-                    // Vorhandene Kommentare ausgeben (deine Helper-Funktion)
+                    // Kommentare anzeigen
                     display_comments((int)$post['id']);
                     ?>
 
                     <h3 class="comment-title">Kommentar hinzufügen</h3>
 
-                    <form id="comment-form" action="single.php?id=<?= (int)$post['id']; ?>" method="post" class="comment-form">
+                    <form id="comment-form" action="single.php?id=<?= (int)$post['id']; ?>" method="post" class="comment-form" novalidate>
                         <input type="hidden" name="csrf_token" value="<?= csrf_token() ?>">
                         <input type="hidden" name="parent_id" id="parent_id" value="">
                         <input type="hidden" name="post_id"  id="post_id"  value="<?= (int)$post['id']; ?>">
 
-                        <!-- Honeypot: nicht per display:none verstecken -->
+                        <!-- reCAPTCHA v3 -->
+                        <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
+                        <input type="hidden" name="recaptcha_action" value="submit_comment">
+
+                        <!-- Honeypot -->
                         <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
                             <label>Dein Name (frei lassen)</label>
                             <input type="text" name="hp_name" autocomplete="off" tabindex="-1">
                         </div>
 
                         <?php if ($isLoggedIn()): ?>
-                            <!-- Eingeloggt: Username anzeigen, Feld nicht editierbar -->
                             <p class="muted">Eingeloggt als <strong><?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8'); ?></strong></p>
                         <?php else: ?>
-                            <!-- Gäste: Name Pflicht, E-Mail optional + Merken-Checkbox -->
                             <div class="form-group">
-                                <label for="author_name">Name</label><br>
+                                <label for="author_name">Name*</label><br>
                                 <input id="author_name" name="author_name" type="text" value="<?= $prefillName ?>" required>
                             </div>
                             <div class="form-group">
                                 <label>
-                                    <input type="checkbox" name="remember_author" value="1" <?= ($prefillName||$prefillEmail)?'checked':''; ?>>
-                                    Name merken 
+                                    <input type="checkbox" name="remember_author" value="1" <?= ($prefillName ? 'checked' : ''); ?>>
+                                    Name merken
                                 </label>
                             </div>
                         <?php endif; ?>
@@ -156,7 +163,8 @@ if (!$isLoggedIn()) {
                         </div>
 
                         <div class="form-group">
-                            <input type="submit" value="Senden" class="btn-submit">
+                            <input type="submit" value="Senden" class="btn-submit" id="comment-submit">
+                            <span id="sending-status" class="blink">Kommentar wird gesendet…</span>
                         </div>
                     </form>
                 </section>
@@ -206,7 +214,23 @@ if (!$isLoggedIn()) {
     <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
     <script src="assets/js/scripts.js"></script>
 
-    <!-- Reply-Helper: setzt parent_id und scrollt zum Formular -->
+    <!-- reCAPTCHA v3 Script -->
+    <?php if ($recaptchaSiteKey !== ''): ?>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?= htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        grecaptcha.ready(function() {
+          grecaptcha.execute('<?= htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8') ?>', {action: 'submit_comment'})
+            .then(function(token) {
+              var el = document.getElementById('g-recaptcha-response');
+              if (el) el.value = token;
+            });
+        });
+      });
+    </script>
+    <?php endif; ?>
+
+    <!-- Reply-Helper -->
     <script>
     document.addEventListener('click', function (e) {
       const a = e.target.closest('a.reply');
@@ -216,6 +240,23 @@ if (!$isLoggedIn()) {
       const input = document.getElementById('parent_id');
       if (input) input.value = pid;
       document.getElementById('comment-form')?.scrollIntoView({behavior: 'smooth'});
+    });
+    </script>
+
+    <!-- UX: Senden-Button sperren -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('comment-form');
+      const submitBtn = document.getElementById('comment-submit');
+      const statusText = document.getElementById('sending-status');
+
+      if (form && submitBtn && statusText) {
+        form.addEventListener('submit', function() {
+          submitBtn.disabled = true;
+          submitBtn.value = 'Senden…';
+          statusText.style.display = 'inline';
+        });
+      }
     });
     </script>
 </body>

@@ -1,5 +1,33 @@
 <?php
-// Lädt den OOP-Autoloader genau einmal – IMMER mit /app/OOP/bootstrap.php
+function recaptcha_verify(string $token, string $expectedAction, float $minScore = 0.5): bool {
+    $secret = getenv('RECAPTCHA_SECRET') ?: '';
+    if ($secret === '' || $token === '') return false;
+
+    $post = http_build_query([
+        'secret'   => $secret,
+        'response' => $token,
+        'remoteip' => $_SERVER['REMOTE_ADDR'] ?? null,
+    ]);
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => "Content-type: application/x-www-form-urlencoded\r\nContent-Length: " . strlen($post),
+            'content' => $post,
+            'timeout' => 5,
+        ]
+    ]);
+
+    $raw = @file_get_contents('https://www.google.com/recaptcha/api/siteverify', false, $ctx);
+    if ($raw === false) return false;
+
+    $res = json_decode($raw, true);
+    if (!$res || empty($res['success'])) return false;
+    if (!empty($res['action']) && $res['action'] !== $expectedAction) return false;
+
+    return (float)($res['score'] ?? 0.0) >= $minScore;
+}
+
 require_once ROOT_PATH . '/app/helpers/csrf.php';
 
 $__root = defined('ROOT_PATH') ? ROOT_PATH : realpath(__DIR__ . '/..'); // -> Projekt-Root

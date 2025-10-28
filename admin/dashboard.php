@@ -53,12 +53,12 @@ $vm = (new AdminDashboardController(new DbRepository()))->stats() ?? [];
 </head>
 <body>
   <!-- Oberer Admin-Header -->
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <!-- Seiten-Wrapper -->
   <div class="admin-wrapper">
     <!-- Linke Sidebar -->
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <!-- Hauptinhalt -->
     <div class="admin-content">

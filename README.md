@@ -42,7 +42,7 @@
 
 
 - RSS-Feed (z. B. /feed.xml)
-- capture
+- reCAPTCHA
 - barrierefreiheit
 
 

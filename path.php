@@ -1,5 +1,13 @@
 <?php
-/* Zentrale Pfad-/URL-Definitionen + OOP-Bootstrap */
+// reCAPTCHA v3 (unsichtbar) → für Kommentare
+putenv('RECAPTCHA_V3_SITE=6LenCforAAAAAMs2WzBlWMUY7Ubf1gpaawzcPdNs');
+putenv('RECAPTCHA_V3_SECRET=6LenCforAAAAAHSaFp6zx6OY6VMtz8PkkdkF4cG4');
+
+// reCAPTCHA v2 (Checkbox) → für Login
+putenv('RECAPTCHA_V2_SITE=6LcfGforAAAAACjqcOTspM2-7Nxl4wq78ShTGpBp');
+putenv('RECAPTCHA_SV2_ECRET=6LcfGforAAAAAD4Blqgn4u0CjyyxpUbnG_NaiFDF');
+putenv('RECAPTCHA_MIN_SCORE=0.5');
+putenv('RECAPTCHA_MIN_SCORE_LOGIN=0.7');
 
 if (!defined('ROOT_PATH')) {
   define('ROOT_PATH', realpath(dirname(__FILE__)));
