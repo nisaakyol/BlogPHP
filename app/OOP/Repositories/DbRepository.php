@@ -16,11 +16,6 @@ final class DbRepository
         // holt die eine zentrale PDO-Instanz
         $this->pdo = DB::pdo();
     }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // Legacy-kompatible API
-    // ─────────────────────────────────────────────────────────────────────
-
     /**
      * selectAll('posts', ['published'=>1], 'created_at DESC', 10)
      *
@@ -225,23 +220,110 @@ final class DbRepository
 
     // Volltextsuche (LIKE) – nur veröffentlichte/approved
     public function searchPosts(string $term): array
-    {
-        $sql = "SELECT p.*, u.username
+{
+    $term = trim($term);
+    if ($term === '') return [];
+
+    // wie viele Kandidaten brauchen wir mindestens, sonst Fuzzy-Fallback?
+    $NEEDED_MIN = 3;         // wenn weniger → Fallback
+    $CANDIDATE_LIMIT = 500;  // Obergrenze für Kandidaten
+    $rows = [];
+
+    // 1) Primäre Kandidaten: FULLTEXT oder LIKE
+    if ($this->hasFulltextPosts()) {
+        $sql = "SELECT p.id, p.title, p.body, p.created_at, u.username,
+                       COALESCE(p.image,'') AS image,
+                       MATCH(p.title, p.body) AGAINST (:q1 IN NATURAL LANGUAGE MODE) AS ft_score
                 FROM posts p
                 JOIN users u ON u.id = p.user_id
-                WHERE (p.title LIKE :q_title OR p.body LIKE :q_body)
-                AND (p.published = 1 OR p.status = 'approved')
-                ORDER BY p.created_at DESC";
-
-        $stmt = $this->pdo->prepare($sql);
-        $q = '%' . $term . '%';
-        $stmt->execute([
-            ':q_title' => $q,
-            ':q_body'  => $q,
-        ]);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                WHERE (p.published = 1 OR p.status = 'approved')
+                  AND MATCH(p.title, p.body) AGAINST (:q2 IN NATURAL LANGUAGE MODE)
+                ORDER BY ft_score DESC
+                LIMIT {$CANDIDATE_LIMIT}";
+        $st = $this->pdo->prepare($sql);
+        $st->bindValue(':q1', $term, \PDO::PARAM_STR);
+        $st->bindValue(':q2', $term, \PDO::PARAM_STR);
+        $st->execute();
+        $rows = $st->fetchAll(\PDO::FETCH_ASSOC);
+    } else {
+        $like = '%' . $term . '%';
+        $sql = "SELECT p.id, p.title, p.body, p.created_at, u.username,
+                       COALESCE(p.image,'') AS image
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE (p.published = 1 OR p.status = 'approved')
+                  AND (p.title LIKE :q1 OR p.body LIKE :q2)
+                ORDER BY p.created_at DESC
+                LIMIT {$CANDIDATE_LIMIT}";
+        $st = $this->pdo->prepare($sql);
+        $st->bindValue(':q1', $like, \PDO::PARAM_STR);
+        $st->bindValue(':q2', $like, \PDO::PARAM_STR);
+        $st->execute();
+        $rows = $st->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    // 2) Fallback: zu wenige Kandidaten? → hole ungefiltert die letzten X Posts
+    if (count($rows) < $NEEDED_MIN) {
+        $sql = "SELECT p.id, p.title, p.body, p.created_at, u.username,
+                       COALESCE(p.image,'') AS image
+                FROM posts p
+                JOIN users u ON u.id = p.user_id
+                WHERE (p.published = 1 OR p.status = 'approved')
+                ORDER BY p.created_at DESC
+                LIMIT {$CANDIDATE_LIMIT}";
+        $rows = $this->pdo->query($sql)->fetchAll(\PDO::FETCH_ASSOC);
+        // Hinweis: kein ft_score hier – passt, wir werten unten nur Fuzzy.
+    }
+
+    // 3) Re-Ranking mit Fuzzy-Score
+    $scored = [];
+    foreach ($rows as $r) {
+        $score = \App\OOP\Services\SearchService::score(
+            $term,
+            (string)($r['title'] ?? ''),
+            (string)($r['body']  ?? ''),
+            $r['created_at'] ?? null
+        );
+        // Bonus aus FULLTEXT, falls vorhanden
+        if (isset($r['ft_score'])) $score += min(20.0, (float)$r['ft_score']);
+
+        // harte Untergrenze, um irrelevantes Zeug rauszuwerfen
+        if ($score >= 10.0) {
+            $r['_score'] = $score;
+            $scored[] = $r;
+        }
+    }
+
+    // 4) Sortieren: Relevanz DESC, dann Datum DESC, dann ID DESC
+    usort($scored, function ($a, $b) {
+        if ($a['_score'] == $b['_score']) {
+            $ad = $a['created_at'] ?? '1970-01-01 00:00:00';
+            $bd = $b['created_at'] ?? '1970-01-01 00:00:00';
+            if ($ad === $bd) return ($b['id'] <=> $a['id']);
+            return strcmp($bd, $ad);
+        }
+        return $b['_score'] <=> $a['_score'];
+    });
+
+    // _score / ft_score entfernen, um das alte Format zu behalten
+    foreach ($scored as &$r) { unset($r['_score'], $r['ft_score']); }
+
+    return $scored;
+}
+
+
+    /** optionaler Helper – am Ende der Klasse hinzufügen */
+    private function hasFulltextPosts(): bool
+    {
+        $sql = "SELECT 1
+                FROM INFORMATION_SCHEMA.STATISTICS
+                WHERE TABLE_SCHEMA = DATABASE()
+                AND TABLE_NAME = 'posts'
+                AND INDEX_NAME = 'ft_posts_title_body'
+                LIMIT 1";
+        $st = $this->pdo->query($sql);
+        return (bool)$st->fetchColumn();
+    }
     public function deleteCommentsByPost(int $postId): int
     {
         $st = $this->pdo->prepare('DELETE FROM comments WHERE post_id = :id');

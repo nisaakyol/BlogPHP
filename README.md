@@ -32,6 +32,7 @@
 - E-Mail Funktion
 - Kommentare durch Besucher ermöglichen mit hilfe von cookies
 - Spam-Protection
+- Erweiterte Suche mit Fuzzy 
 
 #ToDo
 
@@ -39,7 +40,7 @@
 - Kommentare
 
 
-- Erweiterte Suche mit Fuzzy (z. B. Toleranz bei Tippfehlern, Relevanz-Ranking)
+
 - RSS-Feed (z. B. /feed.xml)
 - capture
 - barrierefreiheit
