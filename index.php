@@ -1,6 +1,6 @@
 <?php
-require 'path.php'; // Lädt Projektpfade/URLs (z. B. ROOT_PATH, BASE_URL)
-require_once ROOT_PATH . '/app/includes/bootstrap.php'; // Autoload/Bootstrap der OOP-Schicht (Namespaces, Services, Repos)
+require 'path.php';
+require_once ROOT_PATH . '/app/includes/bootstrap.php';
 
 use App\OOP\Repositories\DbRepository;
 
@@ -9,22 +9,29 @@ $db = new DbRepository();
 // ─────────────────────────────────────────────────────────────────────
 // Daten laden
 // ─────────────────────────────────────────────────────────────────────
-$posts      = [];
+$recent     = [];
 $postsTitle = 'Recent Posts';
 $topics     = $db->selectAll('topics', [], 'name ASC');
 
 if (isset($_GET['t_id'])) {
   $tId   = (int)($_GET['t_id'] ?? 0);
   $tName = (string)($_GET['name'] ?? '');
-  $posts = $db->getPostsByTopicId($tId);
+  $recent = $db->getPostsByTopicId($tId);
   $postsTitle = "You searched for posts under '" . htmlspecialchars($tName, ENT_QUOTES, 'UTF-8') . "'";
 } elseif (!empty($_POST['search-term'])) {
   $term = (string)$_POST['search-term'];
   $postsTitle = "You searched for '" . htmlspecialchars($term, ENT_QUOTES, 'UTF-8') . "'";
-  $posts = $db->searchPosts($term); // deine erweiterte Suche
+  $recent = $db->searchPosts($term);
 } else {
-  $posts = $db->getPublishedPosts();
+  $recent = $db->getPublishedPosts(); // liefert bereits id,title,body,image,username,created_at
 }
+
+/**
+ * TRENDING:
+ * - Nimm einfach die ersten 12 aus $recent (oder hole separat aus DB per selectAll/ORDER BY)
+ * - eigener Array, damit der Slider genug Slides hat
+ */
+$trending = array_slice($recent, 0, 12);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -32,12 +39,9 @@ if (isset($_GET['t_id'])) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <!-- Externe Icons -->
   <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
-  <!-- Webfonts -->
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
-  <!-- Projekt-CSS -->
-  <link rel="stylesheet" href="<?= BASE_URL; ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL; ?>/assets/css/style.css?v=5">
   <title>Blog</title>
 </head>
 <body>
@@ -54,13 +58,13 @@ if (isset($_GET['t_id'])) {
       <i class="fas fa-chevron-right next"></i>
 
       <div class="post-wrapper">
-        <?php foreach ($posts as $post): ?>
+        <?php foreach ($trending as $post): ?>
           <?php
-            $img = (string)($post['image'] ?? '');
-            $title = (string)($post['title'] ?? '');
-            $username = (string)($post['username'] ?? '');
-            $createdAt = (string)($post['created_at'] ?? '');
-            $createdHuman = $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
+            $img         = (string)($post['image'] ?? '');
+            $title       = (string)($post['title'] ?? '');
+            $username    = (string)($post['username'] ?? '');
+            $createdAt   = (string)($post['created_at'] ?? '');
+            $createdHuman= $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
           ?>
           <div class="post">
             <?php if ($img !== ''): ?>
@@ -93,15 +97,15 @@ if (isset($_GET['t_id'])) {
       <div class="main-content">
         <h1 class="recent-post-title"><?= htmlspecialchars((string)$postsTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
 
-        <?php foreach ($posts as $post): ?>
+        <?php foreach ($recent as $post): ?>
           <?php
-            $img = (string)($post['image'] ?? '');
-            $title = (string)($post['title'] ?? '');
-            $username = (string)($post['username'] ?? '');
-            $createdAt = (string)($post['created_at'] ?? '');
-            $createdHuman = $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
-            $body = (string)($post['body'] ?? '');
-            $preview = mb_strlen($body) > 150 ? mb_substr($body, 0, 150) . '...' : $body;
+            $img         = (string)($post['image'] ?? '');
+            $title       = (string)($post['title'] ?? '');
+            $username    = (string)($post['username'] ?? '');
+            $createdAt   = (string)($post['created_at'] ?? '');
+            $createdHuman= $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
+            $body        = (string)($post['body'] ?? '');
+            $preview     = mb_strlen($body) > 150 ? mb_substr($body, 0, 150) . '...' : $body;
           ?>
           <div class="post clearfix">
             <?php if ($img !== ''): ?>
@@ -160,9 +164,8 @@ if (isset($_GET['t_id'])) {
 
   <?php include(ROOT_PATH . "/app/includes/footer.php"); ?>
 
-  <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
-  <script src="<?= BASE_URL; ?>/assets/js/scripts.js"></script>
+  <script src="<?= BASE_URL; ?>/assets/js/scripts.js?v=5"></script>
 </body>
 </html>

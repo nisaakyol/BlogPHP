@@ -56,10 +56,7 @@ class AdminPostController
                 $this->backToIndex();
             }
 
-            // Falls du Zusatz-Tabellen hast (Kommentare/Bridges), hier optional bereinigen.
-            // try { $this->db->deleteWhere('comments', ['post_id' => $id]); } catch (\Throwable $e) {}
-            // try { $this->db->deleteWhere('post_topic', ['post_id' => $id]); } catch (\Throwable $e) {}
-
+            // Optional: weitere Tabellen bereinigen …
             $rows = $this->db->delete('posts', $id);
 
             if ($rows > 0) {
@@ -84,6 +81,21 @@ class AdminPostController
     {
         if (session_status() === \PHP_SESSION_NONE) session_start();
         usersOnly();
+
+        // NEU: Nur Admin darf publish/unpublish
+        if (empty($_SESSION['admin'])) {
+            $_SESSION['message'] = 'Nicht erlaubt.';
+            $_SESSION['type']    = 'error';
+            $this->backToIndex();
+        }
+
+        // Existenzcheck (optional sinnvoll)
+        $post = $this->db->selectOne('posts', ['id' => $postId]);
+        if (!$post) {
+            $_SESSION['message'] = 'Post nicht gefunden.';
+            $_SESSION['type']    = 'error';
+            $this->backToIndex();
+        }
 
         $this->db->update('posts', $postId, ['published' => $published ? 1 : 0]);
 
@@ -137,8 +149,9 @@ class AdminPostController
             ];
         }
 
-        // Speicherdaten (Body RAW speichern)
         if (session_status() === \PHP_SESSION_NONE) session_start();
+
+        // Speicherdaten (Body RAW speichern)
         $data = [
             'title'    => (string)$post['title'],
             'body'     => (string)$post['body'],     // RAW
@@ -156,6 +169,7 @@ class AdminPostController
                 $this->sendPublishEmail($post['title']);
             }
             $data['published'] = 0;
+            // Optional: $data['status'] = 'submitted';
             $this->db->create('posts', $data);
             $_SESSION['message'] = 'Post eingereicht (wartet auf Freigabe).';
         }
@@ -177,12 +191,40 @@ class AdminPostController
     public function handleEdit(array $get, array $post, array $files): array
     {
         require_once ROOT_PATH . '/app/helpers/validatePost.php';
+        if (session_status() === \PHP_SESSION_NONE) session_start();
+        usersOnly();
 
         $topics = $this->db->selectAll('topics', [], 'name ASC');
 
         // GET ?id => Formular befüllen
         if (isset($get['id'])) {
             $p = $this->db->selectOne('posts', ['id' => (int)$get['id']]);
+            if (!$p) {
+                return [
+                    'errors'    => ['Post nicht gefunden.'],
+                    'id'        => 0,
+                    'title'     => '',
+                    'body'      => '',
+                    'topic_id'  => '',
+                    'published' => '',
+                    'topics'    => $topics,
+                ];
+            }
+
+            // Rechte: Admin oder Besitzer
+            $isOwner = ((int)$p['user_id'] === (int)($_SESSION['id'] ?? 0));
+            $isAdmin = !empty($_SESSION['admin']);
+            if (!$isAdmin && !$isOwner) {
+                return [
+                    'errors'    => ['Nicht erlaubt.'],
+                    'id'        => 0,
+                    'title'     => '',
+                    'body'      => '',
+                    'topic_id'  => '',
+                    'published' => '',
+                    'topics'    => $topics,
+                ];
+            }
 
             return [
                 'errors'    => [],
@@ -209,6 +251,36 @@ class AdminPostController
             ];
         }
 
+        // Original-Post laden (Ownership & aktueller published-Status)
+        $id   = (int)$post['id'];
+        $orig = $this->db->selectOne('posts', ['id' => $id]);
+        if (!$orig) {
+            return [
+                'errors'    => ['Post nicht gefunden.'],
+                'id'        => 0,
+                'title'     => '',
+                'body'      => '',
+                'topic_id'  => '',
+                'published' => '',
+                'topics'    => $topics,
+            ];
+        }
+
+        // Rechte: Admin oder Besitzer
+        $isOwner = ((int)$orig['user_id'] === (int)($_SESSION['id'] ?? 0));
+        $isAdmin = !empty($_SESSION['admin']);
+        if (!$isAdmin && !$isOwner) {
+            return [
+                'errors'    => ['Nicht erlaubt.'],
+                'id'        => 0,
+                'title'     => '',
+                'body'      => '',
+                'topic_id'  => '',
+                'published' => '',
+                'topics'    => $topics,
+            ];
+        }
+
         // Validierung
         $errors    = validatePost($post, $files);
 
@@ -218,7 +290,7 @@ class AdminPostController
         if ($errors) {
             return [
                 'errors'    => $errors,
-                'id'        => (int)($post['id'] ?? 0),
+                'id'        => $id,
                 'title'     => $post['title']     ?? '',
                 'body'      => $post['body']      ?? '',
                 'topic_id'  => $post['topic_id']  ?? '',
@@ -227,19 +299,23 @@ class AdminPostController
             ];
         }
 
-        $id = (int)$post['id'];
-
-        // Speicherdaten (Body RAW speichern)
-        if (session_status() === \PHP_SESSION_NONE) session_start();
+        // Speicherdaten (Body RAW speichern) — Ownership bleibt wie im Original!
         $data = [
-            'title'     => (string)$post['title'],
-            'body'      => (string)$post['body'],  // RAW
-            'topic_id'  => (int)$post['topic_id'],
-            'user_id'   => (int)($_SESSION['id'] ?? 0),
-            'published' => !empty($post['published']) ? 1 : 0,
+            'title'    => (string)$post['title'],
+            'body'     => (string)$post['body'],  // RAW
+            'topic_id' => (int)$post['topic_id'],
+            // 'user_id' NICHT überschreiben! (vorher wurde es auf Session-ID gesetzt)
         ];
+
         if ($imageName) {
             $data['image'] = $imageName;
+        }
+
+        // published nur Admin; für normale User published unverändert lassen
+        if ($isAdmin) {
+            $data['published'] = !empty($post['published']) ? 1 : 0;
+        } else {
+            $data['published'] = (int)$orig['published']; // unverändert
         }
 
         $this->db->update('posts', $id, $data);

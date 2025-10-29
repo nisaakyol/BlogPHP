@@ -33,16 +33,17 @@
 - Kommentare durch Besucher ermöglichen mit hilfe von cookies
 - Spam-Protection
 - Erweiterte Suche mit Fuzzy 
+- reCAPTCHA v2 beim Login
+- reCAPTCHA v3 bei den Kommentaren
 
 #ToDo
 
 - Ordner-Struktur
 - Kommentare
 
-
-
 - RSS-Feed (z. B. /feed.xml)
-- reCAPTCHA
 - barrierefreiheit
+- bilder in der view
+- bilder wenn man auf den artikel klickt
 
 

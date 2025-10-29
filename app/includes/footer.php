@@ -13,11 +13,11 @@
   <div class="footer-content">
     <!-- Info/Branding -->
     <section class="footer-section about" aria-labelledby="footer-about-heading">
-      <h1 id="footer-about-heading" class="logo-text">Platzhalter</h1>
+      <h1 id="footer-about-heading" class="logo-text">Contact Information</h1>
 
       <div class="contact">
-        <span><i class="fas fa-phone" aria-hidden="true"></i> <span class="sr-only">Telefon:</span>0000 00000000</span>
-        <span><i class="fas fa-envelope" aria-hidden="true"></i> <span class="sr-only">E-Mail:</span> bsp@bsp.de</span>
+        <span><i class="fas fa-phone" aria-hidden="true"></i> <span class="sr-only">Telefon:</span>0711 00000000</span>
+        <span><i class="fas fa-envelope" aria-hidden="true"></i> <span class="sr-only">E-Mail:</span> travel-blog@blog.de</span>
       </div>
 
       <div class="socials" aria-label="Soziale Medien">
@@ -72,9 +72,5 @@
         </button>
       </form>
     </section>
-  </div>
-
-  <div class="footer-bottom">
-    &copy; <?php echo date('Y'); ?> Platzhalter
   </div>
 </footer>

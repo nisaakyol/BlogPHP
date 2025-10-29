@@ -7,6 +7,8 @@
  * - displayPosts.php rendert NUR <tr>…</tr>-Zeilen (keine zweite Tabelle)
  */
 
+declare(strict_types=1);
+
 require __DIR__ . '/../_admin_boot.php';
 adminOnly();
 
@@ -16,15 +18,12 @@ require_once ROOT_PATH . '/app/helpers/csrf.php';
 use App\OOP\Controllers\Admin\AdminPostController;
 use App\OOP\Repositories\DbRepository;
 
-$isAdmin = !empty($_SESSION['admin']);
+$isAdmin = !empty($_SESSION['admin'] ?? 0);
 
 // Controller
 $ctrl = new AdminPostController(new DbRepository());
 
-// (Optional) Alte GET-Aktionen – wenn du sie noch brauchst. Sonst entfernen.
-if (isset($_GET['delete_id'])) { $ctrl->delete((int)$_GET['delete_id']); }
-// if (isset($_GET['published'], $_GET['p_id'])) { $ctrl->togglePublish((int)$_GET['p_id'], (int)$_GET['published']); }
-
+// Keine GET-Action mehr für kritische Dinge (Delete/Publish). Alles via POST + CSRF.
 // ViewModel abrufen
 $vm        = $ctrl->index();
 $posts     = $vm['posts']     ?? [];
@@ -42,8 +41,8 @@ $usersById = $vm['usersById'] ?? [];
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="../../assets/css/style.css">
-  <link rel="stylesheet" href="../../assets/css/admin.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/style.css">
+  <link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/admin.css">
 
   <title>Admin – Manage Posts</title>
 </head>
@@ -55,8 +54,8 @@ $usersById = $vm['usersById'] ?? [];
 
     <div class="admin-content">
       <div class="button-group">
-        <a href="create.php" class="btn btn-big">Add Post</a>
-        <a href="index.php"  class="btn btn-big">Manage Posts</a>
+        <a href="<?= BASE_URL ?>/admin/posts/create.php" class="btn btn-big">Add Post</a>
+        <a href="<?= BASE_URL ?>/admin/posts/index.php"  class="btn btn-big">Manage Posts</a>
       </div>
 
       <div class="content">
@@ -87,6 +86,6 @@ $usersById = $vm['usersById'] ?? [];
 
   <!-- JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="../../assets/js/scripts.js"></script>
+  <script src="<?= BASE_URL ?>/assets/js/scripts.js"></script>
 </body>
 </html>

@@ -18,7 +18,6 @@
   <ul class="nav" role="navigation" aria-label="Hauptnavigation">
     <li><a href="<?php echo BASE_URL . '/index.php'; ?>">Home</a></li>
     <li><a href="<?php echo BASE_URL . '/hardcode/About.php'; ?>">About</a></li>
-    <li><a href="https://www.deepl.com/de/translator">Services</a></li>
 
     <!-- Wenn User eingeloggt: Username + Dropdown -->
     <?php if (isset($_SESSION['id'])): ?>

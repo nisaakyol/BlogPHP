@@ -51,11 +51,11 @@ unset($_SESSION['errors'], $_SESSION['old']); // einmalig anzeigen, dann leeren
 </head>
 <body>
   <!-- Fester Admin-Header -->
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
     <!-- Linke Admin-Sidebar -->
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <div class="admin-content">
       <!-- Schnellzugriff -->

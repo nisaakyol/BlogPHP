@@ -42,7 +42,7 @@ require("../path.php"); // Initialisiert Pfad-/URL-Konstanten (z. B. ROOT_PATH, 
     <div class="main-content-wrapper">
       <!-- Titelbereich (zentriert) -->
       <div style="text-align: center;">
-        <h1 class="post-title">Profil der DHBW Stuttgart</h1>
+        <h1 class="post-title">Travel-Blog</h1>
       </div>
 
       <!-- Leer-/Abstandsblock (zentriert, mit linker Margin reserviert) -->
@@ -53,25 +53,14 @@ require("../path.php"); // Initialisiert Pfad-/URL-Konstanten (z. B. ROOT_PATH, 
         <div style="margin-left: 350px; margin-right: 320px; margin-top: 40px;">
           <section>
             <p>
-              text
+            Auf diesem Blog findet ihr viele Eindrücke, Erfahrungen und Informationen rund um das Thema Auslandssemester. Im Mittelpunkt stehen fünf Länder, die ganz unterschiedliche Seiten der Welt zeigen: Singapur, Neuseeland, Australien, Irland und Südafrika. Jedes dieser Länder hat seinen eigenen Charakter, eine besondere Atmosphäre und ganz eigene Möglichkeiten, das Leben und Studieren einmal anders kennenzulernen.
+            <br><br>Hier könnt ihr nachlesen, wie das Leben in diesen Ländern aussieht, wie das Studium dort abläuft und was den Alltag als internationale Studierende prägt. Zu jedem Land gibt es vier Artikel, die euch einen guten Überblick geben. Es geht um das Leben vor Ort, um den Campusalltag, um spannende Reiseziele und um viele praktische Tipps, die bei der Vorbereitung helfen können. So bekommt ihr einen echten Eindruck davon, wie unterschiedlich das Leben in diesen Ländern ist und was sie trotzdem miteinander verbindet.
+            <br><br>Dieser Blog richtet sich an alle, die neugierig auf die Welt sind und Lust haben, Neues zu entdecken. Vielleicht plant ihr selbst ein Auslandssemester oder wollt einfach mehr darüber erfahren, wie das Leben in anderen Ländern wirklich aussieht. Hier findet ihr ehrliche Eindrücke, hilfreiche Informationen und kleine Geschichten, die zeigen, warum ein Studium im Ausland so viel mehr ist als nur eine Zeit an einer anderen Universität. Lasst euch inspirieren und entdeckt, welches Land am besten zu euch passt
             </p>
           </section>
         </div>
       </div>
-
-      <!-- Highlight-/Erfahrungsbereich (Teaser) -->
-      <div class="experience-section">
-        <div class="experience-text">
-          <h2>Überschrift</h2>
-          <p>text</p>
-        </div>
-      </div>
-
-      <!-- Buttonleiste mit externen Links zu offiziellen DHBW-Unterseiten -->
-      <div class="button-container">
-        <a href="https://www.deepl.com/de/translator" class="custom-button">Button</a>
-      </div>  
-
+      
   <!-- Globale Fußzeile via Include -->
   <?php include(ROOT_PATH . "/app/includes/footer.php"); ?>
 

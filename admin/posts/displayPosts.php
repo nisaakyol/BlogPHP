@@ -11,13 +11,12 @@
  * Hinweis:
  *   Diese Datei rendert NUR <tr>…</tr>-Zeilen. KEIN <table>, KEIN <thead>!
  */
-
 declare(strict_types=1);
 
 if (session_status() === PHP_SESSION_NONE) session_start();
 require_once ROOT_PATH . '/app/helpers/csrf.php';
 
-$isAdmin       = !empty($_SESSION['admin']);
+$isAdmin       = !empty($_SESSION['admin'] ?? 0);
 $currentUserId = (int)($_SESSION['id'] ?? 0);
 
 $e  = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
@@ -42,10 +41,10 @@ foreach ($posts as $post):
 
   $badge = $badgeMap[$status] ?? ['?', 'opacity:.6;'];
 
-  // Submit nur für Besitzer UND keine Admins (Admin soll keinen Submit sehen)
+  // Submit nur für Besitzer (nicht Admin) und wenn draft/rejected
   $canSubmit = (!$isAdmin) && $isOwn && in_array($status, ['draft','rejected'], true);
 
-  // Signierten Preview-Link bauen (7 Tage gültig)
+  // Signierter Preview-Link (7 Tage gültig)
   $secret  = defined('EMAIL_LINK_SECRET') ? EMAIL_LINK_SECRET : 'dev';
   $exp     = time() + 7*24*60*60;
   $sig     = hash_hmac('sha256', $postId . '|preview|' . $exp, $secret);
@@ -68,7 +67,7 @@ foreach ($posts as $post):
     <span class="badge" style="<?= $badge[1] ?>"><?= $badge[0] ?></span>
   </td>
 
-  <!-- Actions (View/Edit/Delete [+ Submit für Besitzer, nicht Admin]) -->
+  <!-- Actions (View/Edit/Delete [+ Submit für Besitzer]) -->
   <td class="col-actions">
     <div class="actions">
       <a href="<?= $viewUrl ?>" class="btn btn--sm">
@@ -76,35 +75,42 @@ foreach ($posts as $post):
       </a>
 
       <?php if ($isOwn): ?>
-        <a href="edit.php?id=<?= $postId ?>" class="btn btn--sm btn--success">
+        <a href="<?= BASE_URL ?>/admin/posts/edit.php?id=<?= $postId ?>" class="btn btn--sm btn--success">
           <i class="fas fa-pen"></i> Edit
         </a>
-        <a href="index.php?delete_id=<?= $postId ?>"
-           class="btn btn--sm btn--danger"
-           data-confirm="Post wirklich löschen?">
-          <i class="fas fa-trash"></i> Delete
-        </a>
+
+        <!-- Delete via POST + CSRF -->
+        <form action="<?= BASE_URL ?>/admin/posts/postActions.php" method="post" style="display:inline">
+          <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="post_id" value="<?= $postId ?>">
+          <button type="submit" class="btn btn--sm btn--danger" data-confirm="Post wirklich löschen?">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </form>
       <?php endif; ?>
 
       <?php if ($canSubmit): ?>
-        <!-- Dieser Link triggert in admin/posts/index.php den submit-Handler,
-             der PostWriteController::submit($id) aufruft und die Mail verschickt -->
-        <a href="index.php?submit_id=<?= $postId ?>"
-           class="btn btn--sm"
-           onclick="return confirm('Beitrag zur Prüfung einreichen?');">
-          <i class="fas fa-paper-plane"></i> Submit
-        </a>
+        <!-- Submit zur Prüfung via POST + CSRF -->
+        <form action="<?= BASE_URL ?>/admin/posts/postActions.php" method="post" style="display:inline">
+          <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
+          <input type="hidden" name="action" value="submit">
+          <input type="hidden" name="post_id" value="<?= $postId ?>">
+          <button type="submit" class="btn btn--sm" data-confirm="Beitrag zur Prüfung einreichen?">
+            <i class="fas fa-paper-plane"></i> Submit
+          </button>
+        </form>
       <?php endif; ?>
     </div>
   </td>
 
-  <!-- Moderation (nur Admin) – bleibt POST wie gehabt, Note via prompt() -->
-  <?php if ($isAdmin): ?>
+  <!-- Moderation (nur Admin UND nicht eigener Post) -->
+  <?php if ($isAdmin && !$isOwn): ?>
     <td class="col-note">
       <div class="actions">
         <?php if ($status !== 'approved'): ?>
-          <form action="moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
-            <input type="hidden" name="csrf" value="<?= csrf_token(); ?>">
+          <form action="<?= BASE_URL ?>/admin/posts/moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
             <input type="hidden" name="post_id" value="<?= $postId ?>">
             <input type="hidden" name="action"  value="approve">
             <input type="hidden" name="note"    value="" class="js-note-input">
@@ -115,8 +121,8 @@ foreach ($posts as $post):
         <?php endif; ?>
 
         <?php if ($status !== 'rejected'): ?>
-          <form action="moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
-            <input type="hidden" name="csrf" value="<?= csrf_token(); ?>">
+          <form action="<?= BASE_URL ?>/admin/posts/moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
+            <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
             <input type="hidden" name="post_id" value="<?= $postId ?>">
             <input type="hidden" name="action"  value="reject">
             <input type="hidden" name="note"    value="" class="js-note-input">
@@ -134,13 +140,13 @@ foreach ($posts as $post):
 <?php if ($sn === 0): ?>
 <tr>
   <td colspan="<?= $isAdmin ? 6 : 5 ?>" style="padding:.75rem;opacity:.7;">
-    Keine Posts vorhanden. <a href="create.php">Jetzt neuen Post erstellen</a>.
+    Keine Posts vorhanden. <a href="<?= BASE_URL ?>/admin/posts/create.php">Jetzt neuen Post erstellen</a>.
   </td>
 </tr>
 <?php endif; ?>
 
 <script>
-  // Bestätigungsdialog für Links mit data-confirm
+  // Bestätigungsdialog für Elemente mit data-confirm
   document.addEventListener('click', function (e) {
     const el = e.target.closest('[data-confirm]');
     if (!el) return;
@@ -156,24 +162,19 @@ foreach ($posts as $post):
 
     e.preventDefault();
 
-    // passendes Formular + hidden note-Feld finden
     const form = btn.closest('form');
     const noteField = form ? form.querySelector('.js-note-input') : null;
     if (!form || !noteField) return;
 
-    const title = btn.getAttribute('data-title') || '';
+    const title  = btn.getAttribute('data-title') || '';
     const action = form.querySelector('input[name="action"]')?.value || '';
 
-    // einfache Prompt-Variante (kein zusätzliches Modal-Markup nötig)
     const prefix = action === 'approve' ? 'Freigeben' : 'Ablehnen';
     const note = window.prompt(prefix + (title ? ' – ' + title : '') + '\nOptional: kurze Notiz für den Autor:', '');
 
-    if (note === null) {
-      // Abbrechen
-      return;
-    }
+    if (note === null) return; // Abbruch
 
-    noteField.value = note.trim();
+    noteField.value = (note || '').trim();
     form.submit();
   });
 </script>

@@ -58,6 +58,14 @@ if (!$isLoggedIn()) {
 
 // reCAPTCHA v3 Site-Key aus ENV (aus path.php)
 $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '';
+
+// Bild-URL vorbereiten (falls vorhanden)
+$heroImgUrl = !empty($post['image'])
+  ? BASE_URL . '/assets/images/' . rawurlencode((string)$post['image'])
+  : null;
+
+// kleiner Escaper
+$e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -65,25 +73,32 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title><?= htmlspecialchars($post['title'] ?? 'Beitrag'); ?> | DHBW-BLOG</title>
+    <title><?= $e($post['title'] ?? 'Beitrag'); ?> | DHBW-BLOG</title>
 
     <!-- Fonts/Styles -->
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
 
+    <!-- Single-Overrides: verhindern Cutoff in der Einzelansicht -->
     <style>
-        .content { display:flex; gap:20px; flex-wrap:wrap; }
-        .comment-section .form-group { margin: .75rem 0; }
-        .comment-section .btn-submit { padding: .5rem 1rem; }
-        .muted { color:#666; font-size:.95rem; }
-        .flash { padding:.5rem .75rem; border-radius:.25rem; margin:.5rem 0; }
-        .flash.success { background:#e6ffed; border:1px solid #a7f3d0; }
-        .flash.error   { background:#fee2e2; border:1px solid #fecaca; }
-        .comment-form small { display:block; color:#666; }
-        #sending-status { display:none; margin-left:10px; color:#666; font-style:italic; }
-        @keyframes blink { 0%,50%,100%{opacity:1} 25%,75%{opacity:.5} }
-        #sending-status.blink { animation: blink 1.5s linear infinite; }
+      .main-content.single article.post{
+        height:auto !important;
+        overflow:visible !important;
+        background:transparent;
+        box-shadow:none;
+      }
+      .main-content.single .post-hero{ margin:0 0 16px; overflow:hidden; line-height:0 }
+      .main-content.single .post-hero img{ display:block; width:100%; height:140px; object-fit:cover }
+      .main-content.single .post-textwrap{
+        overflow:visible !important;
+        max-width:100%;
+      }
+      .main-content.single .post-textwrap *{
+        max-width:100%;
+        word-break:break-word;
+        overflow-wrap:anywhere;
+      }
     </style>
 </head>
 <body>
@@ -98,16 +113,26 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
         <div class="content clearfix">
 
             <!-- Main Content Wrapper -->
-            <div class="main-content-wrapper">
+            <div class="main-content-wrapper main-content single">
 
                 <!-- Post -->
                 <section class="post-section">
-                    <article class="post">
+                    <article class="post" id="single-post">
                         <header class="post-header">
-                            <h1 class="post-title"><?= htmlspecialchars($post['title']); ?></h1>
+                            <h1 class="post-title"><?= $e($post['title'] ?? ''); ?></h1>
                         </header>
-                        <div class="post-content">
-                            <?= html_entity_decode($post['body']); ?>
+
+                        <?php if ($heroImgUrl): ?>
+                          <figure class="post-hero">
+                            <img src="<?= $heroImgUrl; ?>" alt="<?= $e($post['title'] ?? 'Post image'); ?>">
+                          </figure>
+                        <?php endif; ?>
+
+                        <!-- Getrennter Text-Wrapper (schützt vor overflow/height aus Karten-Styles) -->
+                        <div class="post-textwrap">
+                          <div class="post-content">
+                            <?= html_entity_decode((string)$post['body']); ?>
+                          </div>
                         </div>
                     </article>
                 </section>
@@ -117,7 +142,7 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
                     <?php
                     if (!empty($_SESSION['message'])) {
                         $type = $_SESSION['type'] ?? 'success';
-                        echo '<div class="flash '.$type.'">'.htmlspecialchars($_SESSION['message'], ENT_QUOTES, 'UTF-8').'</div>';
+                        echo '<div class="flash '.$type.'">'.$e($_SESSION['message']).'</div>';
                         unset($_SESSION['message'], $_SESSION['type']);
                     }
 
@@ -143,7 +168,7 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
                         </div>
 
                         <?php if ($isLoggedIn()): ?>
-                            <p class="muted">Eingeloggt als <strong><?= htmlspecialchars($currentUsername, ENT_QUOTES, 'UTF-8'); ?></strong></p>
+                            <p class="muted">Eingeloggt als <strong><?= $e($currentUsername); ?></strong></p>
                         <?php else: ?>
                             <div class="form-group">
                                 <label for="author_name">Name*</label><br>
@@ -164,7 +189,7 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
 
                         <div class="form-group">
                             <input type="submit" value="Senden" class="btn-submit" id="comment-submit">
-                            <span id="sending-status" class="blink">Kommentar wird gesendet…</span>
+                            <span id="sending-status" class="blink" style="display:none;">Kommentar wird gesendet…</span>
                         </div>
                     </form>
                 </section>
@@ -179,10 +204,10 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
                     <?php foreach ($posts as $p): ?>
                         <div class="post clearfix">
                             <?php if (!empty($p['image'])): ?>
-                                <img src="<?= BASE_URL . '/assets/images/' . htmlspecialchars($p['image']); ?>" alt="">
+                                <img src="<?= BASE_URL . '/assets/images/' . $e($p['image']); ?>" alt="">
                             <?php endif; ?>
                             <a href="<?= BASE_URL . '/single.php?id=' . (int)$p['id']; ?>" class="title">
-                                <h4><?= htmlspecialchars($p['title']); ?></h4>
+                                <h4><?= $e($p['title']); ?></h4>
                             </a>
                         </div>
                     <?php endforeach; ?>
@@ -194,8 +219,8 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
                     <ul>
                         <?php foreach ($topics as $topic): ?>
                             <li>
-                                <a href="<?= BASE_URL . '/index.php?t_id=' . (int)$topic['id'] . '&name=' . urlencode($topic['name']); ?>">
-                                    <?= htmlspecialchars($topic['name']); ?>
+                                <a href="<?= BASE_URL . '/index.php?t_id=' . (int)$topic['id'] . '&name=' . urlencode((string)$topic['name']); ?>">
+                                    <?= $e($topic['name']); ?>
                                 </a>
                             </li>
                         <?php endforeach; ?>
@@ -216,11 +241,11 @@ $recaptchaSiteKey = getenv('RECAPTCHA_V3_SITE') ?: getenv('RECAPTCHA_SITE') ?: '
 
     <!-- reCAPTCHA v3 Script -->
     <?php if ($recaptchaSiteKey !== ''): ?>
-    <script src="https://www.google.com/recaptcha/api.js?render=<?= htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8') ?>"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=<?= $e($recaptchaSiteKey) ?>"></script>
     <script>
       document.addEventListener('DOMContentLoaded', function () {
         grecaptcha.ready(function() {
-          grecaptcha.execute('<?= htmlspecialchars($recaptchaSiteKey, ENT_QUOTES, 'UTF-8') ?>', {action: 'submit_comment'})
+          grecaptcha.execute('<?= $e($recaptchaSiteKey) ?>', {action: 'submit_comment'})
             .then(function(token) {
               var el = document.getElementById('g-recaptcha-response');
               if (el) el.value = token;

@@ -55,10 +55,10 @@ $adminChecked = (int)($old['admin'] ?? $user['admin'] ?? 0) === 1;
   <title>Admin Section - Edit User</title>
 </head>
 <body>
-  <?php include ROOT_PATH . "/app/includes/adminHeader.php"; ?>
+  <?php include ROOT_PATH . "/admin/adminHeader.php"; ?>
 
   <div class="admin-wrapper">
-    <?php include ROOT_PATH . "/app/includes/adminSidebar.php"; ?>
+    <?php include ROOT_PATH . "/admin/adminSidebar.php"; ?>
 
     <div class="admin-content">
       <div class="button-group">
