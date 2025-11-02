@@ -1,0 +1,68 @@
+<?php
+// Zweck: Globale Fußzeile mit Kurztext, Quick-Links und Kontaktformular
+?>
+<footer class="footer" role="contentinfo">
+  <div class="footer-content">
+    <!-- Info/Branding -->
+    <section class="footer-section about" aria-labelledby="footer-about-heading">
+      <h1 id="footer-about-heading" class="logo-text">Contact Information</h1>
+
+      <div class="contact">
+        <span><i class="fas fa-phone" aria-hidden="true"></i> <span class="sr-only">Telefon:</span>0711 00000000</span>
+        <span><i class="fas fa-envelope" aria-hidden="true"></i> <span class="sr-only">E-Mail:</span> travel-blog@blog.de</span>
+      </div>
+
+      <div class="socials" aria-label="Soziale Medien">
+        <a href="https://www.facebook.com/dhbwstuttgart" aria-label="Facebook"><i class="fab fa-facebook" aria-hidden="true"></i></a>
+        <a href="https://www.instagram.com/dhbwstuttgart/" aria-label="Instagram"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+        <a href="https://de.linkedin.com/school/dhbw-stuttgart/" aria-label="LinkedIn"><i class="fab fa-linkedin-in" aria-hidden="true"></i></a>
+        <a href="https://www.youtube.com/user/dhbwstuttgart" aria-label="YouTube"><i class="fab fa-youtube" aria-hidden="true"></i></a>
+      </div>
+    </section>
+
+    <!-- Quick Links -->
+    <nav class="footer-section links" aria-labelledby="footer-links-heading">
+      <h2 id="footer-links-heading">Quick Links</h2>
+      <ul>
+        <li><a href="<?php echo BASE_URL . '/public/resources/static/team.php'; ?>">Team</a></li>
+        <li><a href="<?php echo BASE_URL . '/public/resources/static/termsOfUse.php'; ?>">Terms of Use</a></li>
+      </ul>
+    </nav>
+
+    <!-- Kontaktformular -->
+    <section class="footer-section contact-form" aria-labelledby="footer-contact-heading">
+      <h2 id="footer-contact-heading">Contact us</h2>
+
+      <form action="<?php echo BASE_URL . '/app/Support/helpers/Contact.php'; ?>" method="post" novalidate>
+        <!-- Optional/empfohlen:
+        // <input type="hidden" name="csrf_token" value="<?php // echo $_SESSION['csrf_token'] ?? '' ?>">
+        -->
+
+        <label for="email" class="sr-only">Your email address</label>
+        <input
+          type="email"
+          name="Adresse"
+          id="email"
+          class="text-input contact-input"
+          placeholder="Your email address..."
+          required
+        >
+
+        <label for="message" class="sr-only">Your message</label>
+        <textarea
+          rows="4"
+          name="message"
+          id="message"
+          class="text-input contact-input"
+          placeholder="Your message..."
+          required
+        ></textarea>
+
+        <button type="submit" class="btn btn-big contact-btn" aria-label="Send message">
+          <i class="fas fa-envelope" aria-hidden="true"></i>
+          Send
+        </button>
+      </form>
+    </section>
+  </div>
+</footer>

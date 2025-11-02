@@ -1,5 +1,4 @@
 # BlogPHP
-
 #Funktionen-SOLL
 - HTML/Markdown-Eingabe für Artikeltext
 - Freigabe-Workflow (Admin/Chef-Redakteur)
@@ -41,9 +40,11 @@
 - Ordner-Struktur
 - Kommentare
 
-- RSS-Feed (z. B. /feed.xml)
+
 - barrierefreiheit
+- topics und popular 
+- cookie banner
+
+vielleicht:
 - bilder in der view
-- bilder wenn man auf den artikel klickt
-
-
+- RSS-Feed (z. B. /feed.xml)
