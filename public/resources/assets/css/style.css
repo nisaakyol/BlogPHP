@@ -19,9 +19,6 @@ a { color:inherit; text-decoration:none }
 /* =========================================================
    Header / Nav
 ========================================================= */
-.post-header{ margin-bottom:20px; text-align:center; line-height:normal }
-.post-header .post-title{ line-height:1.25; margin:0 0 12px; word-break:break-word; overflow-wrap:anywhere }
-
 header{ background:#2e2e2e; height:66px }
 header *{ color:#fff }
 header .logo{ float:left; height:inherit; margin-left:2em }
@@ -105,7 +102,7 @@ header .menu-toggle{ display:none }
 .content .main-content.single{ background:#fff; padding:20px 50px; font-size:1.1em; border-radius:5px }
 .content .main-content.single .post-title{ text-align:center; margin-bottom:40px }
 
-/* WICHTIG: Artikel darf wachsen, nichts clippen */
+/* Artikel darf wachsen */
 .content .main-content.single .post{
   height:auto !important;
   overflow:visible !important;
@@ -217,7 +214,6 @@ header .menu-toggle{ display:none }
 @media (max-width:600px){
   .auth-content{ width:90% }
   .content .main-content.single{ padding:10px 20px }
-  /* Karten zerfallen untereinander – weiterhin nur Listenansicht */
   .content .main-content:not(.single) .post{ height:auto }
   .content .main-content:not(.single) .post .post-image,
   .content .main-content:not(.single) .post .post-preview{ width:100%; float:none }
@@ -246,3 +242,67 @@ header .menu-toggle{ display:none }
 .gallery-item img{ max-width:100%; height:auto; display:block; margin-bottom:10px }
 .gallery-item h3{ margin:5px 0; font-size:18px; color:#fff }
 .gallery-item p{ margin:0; font-size:14px }
+
+/* =========================================================
+   Bild-Untertitel
+========================================================= */
+.post-figcaption { font-size:.9rem; color:#bfbfbf; margin-top:.5rem; line-height:1.3; }
+
+/* =========================================================
+   A11y + TTS für SINGLE (bereinigt)
+========================================================= */
+
+/* Skip-Link für Tastatur */
+.skip-link { position:absolute; left:-9999px; top:auto; width:1px; height:1px; overflow:hidden; }
+.skip-link:focus { position:static; width:auto; height:auto; padding:.4rem .6rem; background:#fff; }
+
+/* Titel als dunkler Balken */
+.main-content.single .post-header .post-title{
+  display:block;
+  background:#333;
+  color:#fff !important;
+  text-align:center;
+  padding:.65rem 1rem;
+  margin:0;
+  border-radius:6px;
+  line-height:1.25;
+}
+
+/* Stacking + Abstand zwischen Titel/Buttons und Bild */
+.main-content.single .post-header{
+  position:relative;
+  z-index:3;
+  background:#fff;           /* verhindert „Durchscheinen“ */
+  padding-bottom:22px;       /* Luft unter Titel/Buttons */
+}
+.main-content.single .post-hero{
+  position:relative;
+  z-index:1;
+  margin-top:44px !important;  /* Abstand zum Headerbereich */
+}
+
+/* TTS-Buttons */
+.main-content.single .tts-controls{
+  position:relative;
+  z-index:3;
+  display:inline-flex !important;
+  gap:.6rem;
+  margin-top:.6rem;
+  pointer-events:auto;
+}
+.main-content.single .tts-controls button{
+  all:unset;
+  display:inline-block !important;
+  padding:.55rem 1rem;
+  background:#111 !important;
+  color:#fff !important;
+  border:1px solid #000;
+  border-radius:10px;
+  line-height:1.2;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
+}
+.main-content.single .tts-controls button:hover{ filter:brightness(1.1); }
+.main-content.single .tts-controls button:disabled{ opacity:.45; cursor:not-allowed; }
+.main-content.single .tts-controls button i,
+.main-content.single .tts-controls button svg{ color:#fff !important; fill:#fff !important; }

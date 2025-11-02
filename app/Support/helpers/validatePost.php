@@ -38,5 +38,21 @@ function validatePost(array $data, ?array $files = null, bool $requireImageOnCre
         }
     }
 
+    $hasNewImage = !empty($files['image']['name']);
+    $hasImageRef = !empty($post['current_image'] ?? '');
+
+    $alt = trim((string)($post['image_alt'] ?? ''));
+    $cap = trim((string)($post['image_caption'] ?? ''));
+
+    if (($hasNewImage || $hasImageRef) && $alt === '') {
+        $errors[] = 'Bitte eine Bildbeschreibung (ALT-Text) angeben.';
+    }
+    if ($alt !== '' && mb_strlen($alt) > 200) {
+        $errors[] = 'Die Bildbeschreibung (ALT) darf max. 200 Zeichen haben.';
+    }
+    if ($cap !== '' && mb_strlen($cap) > 300) {
+        $errors[] = 'Die Bildunterschrift darf max. 300 Zeichen haben.';
+    }
+
     return $errors;
 }

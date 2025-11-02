@@ -1,6 +1,5 @@
 <?php
 // Zweck: Admin – Formular zum Erstellen eines neuen Blog-Posts (Create-Ansicht)
-
 declare(strict_types=1);
 
 require __DIR__ . '/../_admin_boot.php'; // Session/ROOT_PATH/BASE_URL/Guards
@@ -13,16 +12,23 @@ require_once ROOT_PATH . '/app/Infrastructure/Repositories/DbRepository.php';
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Infrastructure\Repositories\DbRepository;
 
+// kleiner HTML-Escaper (in dieser View lokal definieren)
+$e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+
 $ctrl = new AdminPostController(new DbRepository());
 $vm   = $ctrl->handleCreate($_POST, $_FILES);
 
-// ViewModel entpacken (Defaults)
-$errors    = $vm['errors']    ?? [];
-$title     = $vm['title']     ?? '';
-$body      = $vm['body']      ?? '';
-$topic_id  = $vm['topic_id']  ?? '';
-$published = $vm['published'] ?? '';
-$topics    = $vm['topics']    ?? [];
+// ViewModel entpacken (Defaults, alles streng typisieren)
+$errors         = $vm['errors']          ?? [];
+$title          = (string)($vm['title']  ?? '');
+$body           = (string)($vm['body']   ?? '');
+$topic_id       = (string)($vm['topic_id'] ?? '');
+$published      = !empty($vm['published']);
+$topics         = is_array($vm['topics'] ?? null) ? $vm['topics'] : [];
+
+// NEU: Felder für Bildtexte aus dem ViewModel ziehen (oder leer)
+$image_alt      = (string)($vm['image_alt'] ?? '');
+$image_caption  = (string)($vm['image_caption'] ?? '');
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -57,7 +63,8 @@ $topics    = $vm['topics']    ?? [];
               id="title"
               name="title"
               class="text-input"
-              value="<?php echo htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>"
+              value="<?= $e($title) ?>"
+              required
             >
           </div>
 
@@ -66,12 +73,37 @@ $topics    = $vm['topics']    ?? [];
             <textarea
               name="body"
               id="body"
-            ><?php echo htmlspecialchars($body, ENT_QUOTES, 'UTF-8'); ?></textarea>
+              class="text-input text-input--multiline"
+            ><?= $e($body) ?></textarea>
           </div>
 
           <div>
             <label for="image">Image</label>
-            <input type="file" id="image" name="image" class="text-input">
+            <input type="file" id="image" name="image" class="text-input" accept="image/*">
+          </div>
+
+          <!-- NEU: Bildbeschreibung (ALT) & Bildunterschrift -->
+          <div class="form-group">
+            <label for="image_alt">Bildbeschreibung (ALT-Text) *</label>
+            <input
+              id="image_alt"
+              name="image_alt"
+              type="text"
+              value="<?= $e($image_alt) ?>"
+              maxlength="200"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="image_caption">Bildunterschrift (sichtbar)</label>
+            <input
+              id="image_caption"
+              name="image_caption"
+              type="text"
+              value="<?= $e($image_caption) ?>"
+              maxlength="300"
+            >
           </div>
 
           <div>
@@ -79,12 +111,12 @@ $topics    = $vm['topics']    ?? [];
             <select id="topic_id" name="topic_id" class="text-input">
               <option value=""></option>
               <?php foreach ($topics as $topic): ?>
-                <option
-                  value="<?php echo (int)$topic['id']; ?>"
-                  <?php echo (!empty($topic_id) && (int)$topic_id === (int)$topic['id']) ? 'selected' : ''; ?>
-                >
-                  <?php echo htmlspecialchars($topic['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
-                </option>
+                <?php
+                  $tid   = (int)($topic['id'] ?? 0);
+                  $tname = (string)($topic['name'] ?? '');
+                  $sel   = ((string)$tid === $topic_id) ? 'selected' : '';
+                ?>
+                <option value="<?= $tid ?>" <?= $sel ?>><?= $e($tname) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -92,20 +124,12 @@ $topics    = $vm['topics']    ?? [];
           <div>
             <?php if (!empty($_SESSION['admin'])): ?>
               <label>
-                <input
-                  type="checkbox"
-                  name="published"
-                  <?php echo !empty($published) ? 'checked' : ''; ?>
-                >
+                <input type="checkbox" name="published" <?= $published ? 'checked' : '' ?>>
                 Publish
               </label>
             <?php else: ?>
               <label>
-                <input
-                  type="checkbox"
-                  name="AdminPublish"
-                  <?php echo !empty($published) ? 'checked' : ''; ?>
-                >
+                <input type="checkbox" name="AdminPublish" <?= $published ? 'checked' : '' ?>>
                 Zum Publishen an Admin senden
               </label>
             <?php endif; ?>

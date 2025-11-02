@@ -92,6 +92,18 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             <?php endif; ?>
           </div>
 
+          <div class="form-group">
+            <label for="image_alt">Bildbeschreibung (ALT-Text) *</label>
+            <input id="image_alt" name="image_alt" type="text"
+                  value="<?= $e($image_alt ?? ($post['image_alt'] ?? '')) ?>" maxlength="200" required>
+          </div>
+
+          <div class="form-group">
+            <label for="image_caption">Bildunterschrift (sichtbar)</label>
+            <input id="image_caption" name="image_caption" type="text"
+                  value="<?= $e($image_caption ?? ($post['image_caption'] ?? '')) ?>" maxlength="300">
+          </div>
+
           <div>
             <label for="topic_id">Topic</label>
             <select id="topic_id" name="topic_id" class="text-input">

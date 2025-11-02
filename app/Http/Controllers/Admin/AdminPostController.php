@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// Zweck: Admin-Controller zum Listen, Erstellen, Bearbeiten, Veröffentlichen und Löschen von Posts mit Zugriffsprüfung, Validierung und Bild-Upload.
+// Zweck: Admin-Controller zum Listen, Erstellen, Bearbeiten, Veröffentlichen und Löschen von Posts inkl. Bild-Upload, ALT-Text/Caption und Zugriffsprüfung.
 
 namespace App\Http\Controllers\Admin;
 
@@ -88,7 +88,17 @@ class AdminPostController
 
         // Topics für Select
         $topics = $this->db->selectAll('topics', [], 'name ASC');
-        $vmBase = ['errors'=>[], 'title'=>'', 'body'=>'', 'topic_id'=>'', 'published'=>'', 'topics'=>$topics];
+        $vmBase = [
+            'errors'        => [],
+            'title'         => '',
+            'body'          => '',
+            'topic_id'      => '',
+            'published'     => '',
+            'topics'        => $topics,
+            'image'         => '',
+            'image_alt'     => '',
+            'image_caption' => '',
+        ];
 
         // Noch nicht gesendet → nur leeres VM zurück
         if (!isset($post['add-post'])) return $vmBase;
@@ -101,13 +111,15 @@ class AdminPostController
         // Fehler → Formwerte zurückspiegeln
         if ($errors) {
             return [
-                'errors'    => $errors,
-                'title'     => $post['title']     ?? '',
-                'body'      => $post['body']      ?? '',
-                'topic_id'  => $post['topic_id']  ?? '',
-                'published' => !empty($post['published']) ? 1 : 0,
-                'topics'    => $topics,
-                'image'     => '', // neu erstellen → kein vorhandenes Bild
+                'errors'        => $errors,
+                'title'         => $post['title']         ?? '',
+                'body'          => $post['body']          ?? '',
+                'topic_id'      => $post['topic_id']      ?? '',
+                'published'     => !empty($post['published']) ? 1 : 0,
+                'topics'        => $topics,
+                'image'         => '',
+                'image_alt'     => $post['image_alt']     ?? '',
+                'image_caption' => $post['image_caption'] ?? '',
             ];
         }
 
@@ -116,11 +128,13 @@ class AdminPostController
 
         // Insert-Daten vorbereiten
         $data = [
-            'title'    => (string)$post['title'],
-            'body'     => (string)$post['body'],
-            'topic_id' => (int)$post['topic_id'],
-            'user_id'  => (int)($_SESSION['id'] ?? 0),
-            'image'    => $imageName,
+            'title'         => (string)$post['title'],
+            'body'          => (string)$post['body'],
+            'topic_id'      => (int)$post['topic_id'],
+            'user_id'       => (int)($_SESSION['id'] ?? 0),
+            'image'         => $imageName,
+            'image_alt'     => (string)($post['image_alt'] ?? ''),
+            'image_caption' => (string)($post['image_caption'] ?? ''),
         ];
 
         // Admin darf direkt publishen, Nutzer nur einreichen
@@ -153,42 +167,44 @@ class AdminPostController
         if (isset($get['id'])) {
             $p = $this->db->selectOne('posts', ['id' => (int)$get['id']]);
             if (!$p) {
-                return ['errors'=>['Post nicht gefunden.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>''];
+                return ['errors'=>['Post nicht gefunden.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>'','image_alt'=>'','image_caption'=>''];
             }
             $isOwner = ((int)$p['user_id'] === (int)($_SESSION['id'] ?? 0));
             $isAdmin = !empty($_SESSION['admin']);
             if (!$isAdmin && !$isOwner) {
-                return ['errors'=>['Nicht erlaubt.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>''];
+                return ['errors'=>['Nicht erlaubt.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>'','image_alt'=>'','image_caption'=>''];
             }
             // Erfolgsfall: Werte fürs Formular (Body decodieren)
             return [
-                'errors'    => [],
-                'id'        => (int)$p['id'],
-                'title'     => (string)$p['title'],
-                'body'      => html_entity_decode((string)$p['body'], ENT_QUOTES, 'UTF-8'),
-                'topic_id'  => (int)$p['topic_id'],
-                'published' => (int)$p['published'],
-                'topics'    => $topics,
-                'image'     => (string)($p['image'] ?? ''),  // aktuelles Bild
+                'errors'        => [],
+                'id'            => (int)$p['id'],
+                'title'         => (string)$p['title'],
+                'body'          => html_entity_decode((string)$p['body'], ENT_QUOTES, 'UTF-8'),
+                'topic_id'      => (int)$p['topic_id'],
+                'published'     => (int)$p['published'],
+                'topics'        => $topics,
+                'image'         => (string)($p['image'] ?? ''),                 // aktuelles Bild
+                'image_alt'     => (string)($p['image_alt'] ?? ''),             // ALT-Text
+                'image_caption' => (string)($p['image_caption'] ?? ''),         // Bildunterschrift
             ];
         }
 
         // Kein Update-Submit → leeres VM
         if (!isset($post['update-post'])) {
-            return ['errors'=>[], 'id'=>'', 'title'=>'', 'body'=>'', 'topic_id'=>'', 'published'=>'', 'topics'=>$topics, 'image'=>''];
+            return ['errors'=>[], 'id'=>'', 'title'=>'', 'body'=>'', 'topic_id'=>'', 'published'=>'', 'topics'=>$topics, 'image'=>'', 'image_alt'=>'', 'image_caption'=>''];
         }
 
         // Original laden und Rechte prüfen
         $id   = (int)$post['id'];
         $orig = $this->db->selectOne('posts', ['id' => $id]);
         if (!$orig) {
-            return ['errors'=>['Post nicht gefunden.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>''];
+            return ['errors'=>['Post nicht gefunden.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>'','image_alt'=>'','image_caption'=>''];
         }
 
         $isOwner = ((int)$orig['user_id'] === (int)$_SESSION['id']);
         $isAdmin = !empty($_SESSION['admin']);
         if (!$isAdmin && !$isOwner) {
-            return ['errors'=>['Nicht erlaubt.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>''];
+            return ['errors'=>['Nicht erlaubt.'],'id'=>0,'title'=>'','body'=>'','topic_id'=>'','published'=>'','topics'=>$topics,'image'=>'','image_alt'=>'','image_caption'=>''];
         }
 
         // Validieren & optional Bild hochladen (required=false)
@@ -198,28 +214,28 @@ class AdminPostController
         // Fehler → Werte zurückgeben (aktuelles/übergebenes Bild erhalten)
         if ($errors) {
             return [
-                'errors'    => $errors,
-                'id'        => $id,
-                'title'     => $post['title']     ?? '',
-                'body'      => $post['body']      ?? '',
-                'topic_id'  => $post['topic_id']  ?? '',
-                'published' => !empty($post['published']) ? 1 : 0,
-                'topics'    => $topics,
-                'image'     => (string)($post['current_image'] ?? $orig['image'] ?? ''), 
+                'errors'        => $errors,
+                'id'            => $id,
+                'title'         => $post['title']         ?? '',
+                'body'          => $post['body']          ?? '',
+                'topic_id'      => $post['topic_id']      ?? '',
+                'published'     => !empty($post['published']) ? 1 : 0,
+                'topics'        => $topics,
+                'image'         => (string)($post['current_image'] ?? $orig['image'] ?? ''),
+                'image_alt'     => (string)($post['image_alt'] ?? $orig['image_alt'] ?? ''),
+                'image_caption' => (string)($post['image_caption'] ?? $orig['image_caption'] ?? ''),
             ];
         }
 
         // Felder vorbereiten (Body RAW speichern)
         $data = [
-            'title'    => (string)$post['title'],
-            'body'     => (string)$post['body'],
-            'topic_id' => (int)$post['topic_id'],
+            'title'         => (string)$post['title'],
+            'body'          => (string)$post['body'],
+            'topic_id'      => (int)$post['topic_id'],
+            'image'         => $imageName !== null ? $imageName : (string)($post['current_image'] ?? $orig['image'] ?? ''),
+            'image_alt'     => (string)($post['image_alt'] ?? ''),
+            'image_caption' => (string)($post['image_caption'] ?? ''),
         ];
-
-        // Bild ersetzen oder beibehalten
-        $data['image'] = $imageName !== null
-            ? $imageName
-            : (string)($post['current_image'] ?? $orig['image'] ?? '');
 
         // published nur Admin änderbar
         if ($isAdmin) {
@@ -272,7 +288,7 @@ class AdminPostController
         $isAdmin = !empty($_SESSION['admin']);
 
         $adminUrl     = BASE_URL . '/public/admin/posts/index.php';
-        $dashboardUrl = BASE_URL . '/public/users/dashboard.php';   
+        $dashboardUrl = BASE_URL . '/public/users/dashboard.php';
 
         $target = $isAdmin ? $adminUrl : $dashboardUrl;
 

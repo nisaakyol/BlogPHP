@@ -35,12 +35,3 @@
 - reCAPTCHA v2 beim Login
 - reCAPTCHA v3 bei den Kommentaren
 
-#ToDo
-
-- barrierefreiheit
-- topics und popular 
-- cookie banner
-
-vielleicht:
-- bilder in der view
-- RSS-Feed (z. B. /feed.xml)
