@@ -37,10 +37,6 @@
 
 #ToDo
 
-- Ordner-Struktur
-- Kommentare
-
-
 - barrierefreiheit
 - topics und popular 
 - cookie banner

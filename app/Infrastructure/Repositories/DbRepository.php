@@ -79,10 +79,6 @@ final class DbRepository
         return $st->rowCount();
     }
 
-    // ─────────────────────────────────────────────────────────────────────
-    // Auth-Helfer
-    // ─────────────────────────────────────────────────────────────────────
-
     public function findUserByUsernameOrEmail(string $username, string $email): ?array
     {
         $sql = "SELECT id, username, email FROM users
@@ -140,10 +136,6 @@ final class DbRepository
         $row = $st->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
-
-    // ─────────────────────────────────────────────────────────────────────
-    // intern
-    // ─────────────────────────────────────────────────────────────────────
 
     private function buildWhere(array $conditions): array
     {
@@ -526,4 +518,26 @@ final class DbRepository
 
         return (int)$this->pdo->lastInsertId();
     }
+
+    public function popularPostsByComments(int $days = 30, int $limit = 5): array
+    {
+        $sql = "SELECT p.*, COUNT(c.id) AS comment_count
+                FROM posts p
+                LEFT JOIN comments c 
+                ON c.post_id = p.id
+                AND c.created_at >= (NOW() - INTERVAL :days DAY)
+                WHERE p.published = 1
+                GROUP BY p.id
+                ORDER BY comment_count DESC, p.created_at DESC
+                LIMIT :limit";
+
+        $pdo = \App\Infrastructure\Core\DB::pdo();
+        $st  = $pdo->prepare($sql);
+        $st->bindValue(':days',  $days,  \PDO::PARAM_INT);
+        $st->bindValue(':limit', $limit, \PDO::PARAM_INT);
+        $st->execute();
+
+        return $st->fetchAll();
+    }
+
 }

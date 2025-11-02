@@ -1,14 +1,15 @@
 <?php
 declare(strict_types=1);
+// Zweck: Rendert die Single-Post-Seite inkl. Kommentar-Form, Topics- und Popular-Sidebar.
 
 require __DIR__ . '/path.php';
 require_once ROOT_PATH . '/app/Support/includes/bootstrap.php';
 require_once ROOT_PATH . '/app/Infrastructure/Repositories/DbRepository.php';
-require_once ROOT_PATH . '/app/Http/Controllers/PostReadController.php';
+require_once ROOT_PATH . '/app/Http/Controllers/SingleController.php';
 require_once ROOT_PATH . '/app/Http/Controllers/CommentController.php';
 
 use App\Infrastructure\Repositories\DbRepository;
-use App\Http\Controllers\PostReadController;
+use App\Http\Controllers\SingleController;
 use App\Http\Controllers\CommentController;
 
 // POST → Kommentar speichern (Controller macht Redirect)
@@ -17,21 +18,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['post_id'])) {
     exit;
 }
 
-// Post-ID aus Query
+// Post-ID aus Query (nur für Action/Links benötigt; das Laden übernimmt der SingleController)
 $id = (int)($_GET['id'] ?? 0);
 
-// ViewModel laden
-$repo = new DbRepository();
-$ctrl = new PostReadController($repo);
-$vm   = $ctrl->show($id);
+// ViewModel über SingleController aufbauen (liefert $post, $topics, $popular)
+$sc = new SingleController();
+$sc->boot();
+$post    = $sc->post;
+$topics  = $sc->topics;
+$popular = $sc->popular;
 
-// Daten für Template
-$post     = $vm['post'];
-$comments = $vm['comments'];
-$posts    = $vm['posts']  ?? [];
-$topics   = $vm['topics'] ?? [];
-
-// Helper
+// Helper laden (Kommentare rendern, CSRF, Cookies)
 require_once ROOT_PATH . '/app/Support/helpers/comments.php';
 require_once ROOT_PATH . '/app/Support/helpers/csrf.php';
 require_once ROOT_PATH . '/app/Support/helpers/cookies.php';
@@ -39,7 +36,6 @@ require_once ROOT_PATH . '/app/Support/helpers/cookies.php';
 // kleine Helper
 
 // Prüft, ob ein Nutzer eingeloggt ist (per Session)
-// Rückgabe: bool (true = eingeloggt, false = Gast)
 $isLoggedIn = function (): bool {
     return !empty($_SESSION['id']);
 };
@@ -86,11 +82,17 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
     <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/style.css">
 
     <style>
+        /* Single-Ansicht spezifisch: */
         .main-content.single article.post { height: auto !important; overflow: visible !important; background: transparent; box-shadow: none; }
         .main-content.single .post-hero { margin: 0 0 16px; overflow: hidden; line-height: 0 }
         .main-content.single .post-hero img { display: block; width: 100%; height: 140px; object-fit: cover }
         .main-content.single .post-textwrap { overflow: visible !important; max-width: 100%; }
         .main-content.single .post-textwrap * { max-width: 100%; word-break: break-word; overflow-wrap: anywhere; }
+        .sidebar.single .section .section-title { font-weight: 700; }
+        .sidebar.single .popular .post.clearfix { margin-bottom: .75rem; }
+        .sidebar.single .popular img { width: 64px; height: 48px; object-fit: cover; margin-right: .5rem; float:left; }
+        .sidebar.single .popular h4 { margin: 0; font-size: .95rem; line-height: 1.2; }
+        .sidebar.single .popular small { color: #777; display:block; }
     </style>
 </head>
 <body>
@@ -116,7 +118,7 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
 
                     <div class="post-textwrap">
                         <div class="post-content">
-                            <?= html_entity_decode((string)$post['body']); ?>
+                            <?= html_entity_decode((string)($post['body'] ?? '')); ?>
                         </div>
                     </div>
                 </article>
@@ -132,7 +134,9 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
                 }
 
                 // Kommentare anzeigen (Thread/Antworten inkl. Reply-Links)
-                display_comments((int)$post['id']);
+                if (!empty($post['id'])) {
+                    display_comments((int)$post['id']);
+                }
                 ?>
 
                 <h3 class="comment-title">Kommentar hinzufügen</h3>
@@ -140,7 +144,7 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
                 <!-- Kommentarformular (mit CSRF, Honeypot, reCAPTCHA v3) -->
                 <form
                     id="comment-form"
-                    action="<?= BASE_URL ?>/public/single.php?id=<?= (int)$post['id']; ?>"
+                    action="<?= BASE_URL ?>/public/single.php?id=<?= (int)($post['id'] ?? $id); ?>"
                     method="post"
                     class="comment-form"
                     novalidate
@@ -152,7 +156,7 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
                     <input type="hidden" name="parent_id" id="parent_id" value="">
 
                     <!-- Ziel-Post-ID -->
-                    <input type="hidden" name="post_id" id="post_id" value="<?= (int)$post['id']; ?>">
+                    <input type="hidden" name="post_id" id="post_id" value="<?= (int)($post['id'] ?? 0); ?>">
 
                     <!-- reCAPTCHA Felder -->
                     <input type="hidden" name="g-recaptcha-response" id="g-recaptcha-response">
@@ -197,28 +201,39 @@ error_log('CSRF_RENDER sid=' . session_id() . ' token=' . ($_SESSION['csrf']['to
         <div class="sidebar single">
             <div class="section popular">
                 <h2 class="section-title">Popular</h2>
-                <?php foreach ($posts as $p): ?>
-                    <div class="post clearfix">
-                        <?php if (!empty($p['image'])): ?>
-                            <img src="<?= BASE_URL . '/public/resources/assets/images/' . $e($p['image']); ?>" alt="">
-                        <?php endif; ?>
-                        <a href="<?= BASE_URL . '/single.php?id=' . (int)$p['id']; ?>" class="title">
-                            <h4><?= $e($p['title']); ?></h4>
-                        </a>
-                    </div>
-                <?php endforeach; ?>
+                <?php if (!empty($popular)): ?>
+                    <?php foreach ($popular as $p): ?>
+                        <div class="post clearfix">
+                            <?php if (!empty($p['image'])): ?>
+                                <img src="<?= BASE_URL . '/public/resources/assets/images/' . $e($p['image']); ?>" alt="">
+                            <?php endif; ?>
+                            <a href="<?= BASE_URL . '/public/single.php?id=' . (int)$p['id']; ?>" class="title">
+                                <h4><?= $e($p['title']); ?></h4>
+                            </a>
+                            <?php if (isset($p['comment_count'])): ?>
+                                <small>(<?= (int)$p['comment_count'] ?> Kommentare)</small>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p><em>Keine beliebten Beiträge vorhanden.</em></p>
+                <?php endif; ?>
             </div>
 
             <div class="section topics">
                 <h2 class="section-title">Topics</h2>
                 <ul>
-                    <?php foreach ($topics as $topic): ?>
-                        <li>
-                            <a href="<?= BASE_URL . '/index.php?t_id=' . (int)$topic['id'] . '&name=' . urlencode((string)$topic['name']); ?>">
-                                <?= $e($topic['name']); ?>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
+                    <?php if (!empty($topics)): ?>
+                        <?php foreach ($topics as $topic): ?>
+                            <li>
+                                <a href="<?= BASE_URL . '/public/index.php?t_id=' . (int)$topic['id'] . '&name=' . urlencode((string)$topic['name']); ?>">
+                                    <?= $e($topic['name']); ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <li><em>Keine Topics vorhanden.</em></li>
+                    <?php endif; ?>
                 </ul>
             </div>
         </div>

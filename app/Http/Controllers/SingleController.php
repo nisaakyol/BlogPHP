@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// Zweck: Lädt auf der Single-Post-Seite die Topics sowie den veröffentlichten Post inklusive Autor- und Topic-Namen.
+// Zweck: Lädt auf der Single-Post-Seite die Topics sowie den veröffentlichten Post inklusive Autor- und Topic-Namen und stellt zusätzlich Popular-Posts bereit.
 
 namespace App\Http\Controllers;
 
@@ -10,19 +10,19 @@ use App\Infrastructure\Repositories\DbRepository;
 
 class SingleController
 {
-    // View-Model: aktueller Post
-    public array $post = [];
-
-    // View-Model: Liste der Topics (z. B. für Sidebar)
-    public array $topics = [];
+    public array $post   = [];   // aktueller Post
+    public array $topics = [];   // Topics für Sidebar
+    public array $popular = [];  // NEU: Popular für Sidebar
 
     public function boot(): void
     {
-        // Topics OOP-basiert laden (alphabetisch)
         $repo = new DbRepository();
-        $this->topics = $repo->selectAll('topics', [], 'name ASC');
+        $this->topics  = $repo->selectAll('topics', [], 'name ASC');
 
-        // Post-ID aus Request holen und prüfen
+        // NEU: Popular (z. B. Top 5 der letzten 30 Tage)
+        $this->popular = $repo->popularPostsByComments(30, 5);
+
+        // Post-ID aus Request
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id <= 0) {
             $this->post = [];
@@ -43,7 +43,6 @@ class SingleController
     {
         $pdo = DB::pdo();
 
-        // Nur veröffentlichte Posts liefern
         $sql = <<<SQL
         SELECT
             p.*,
