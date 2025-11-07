@@ -9,7 +9,7 @@ use App\Infrastructure\Repositories\DbRepository; // Repo
 $db = new DbRepository(); // DI-Repo
 
 $recent     = [];
-$postsTitle = 'Recent Posts';
+$postsTitle = 'Aktuelle Beiträge';
 $topics     = $db->selectAll('topics', [], 'name ASC'); // Topics laden
 
 // Filter: Topic oder Suche, sonst alle veröffentlichten
@@ -17,10 +17,10 @@ if (isset($_GET['t_id'])) {
   $tId   = (int)($_GET['t_id'] ?? 0);
   $tName = (string)($_GET['name'] ?? '');
   $recent = $db->getPostsByTopicId($tId);
-  $postsTitle = "You searched for posts under '" . htmlspecialchars($tName, ENT_QUOTES, 'UTF-8') . "'";
+  $postsTitle = "Du hast nach folgenden Posts gesucht '" . htmlspecialchars($tName, ENT_QUOTES, 'UTF-8') . "'";
 } elseif (!empty($_POST['search-term'])) {
   $term = (string)$_POST['search-term'];
-  $postsTitle = "You searched for '" . htmlspecialchars($term, ENT_QUOTES, 'UTF-8') . "'";
+  $postsTitle = "Du hast nach folgenden Posts gesucht '" . htmlspecialchars($term, ENT_QUOTES, 'UTF-8') . "'";
   $recent = $db->searchPosts($term);
 } else {
   $recent = $db->getPublishedPosts(); // id,title,body,image,username,created_at
@@ -47,9 +47,20 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
 
   <div class="page-wrapper">
 
-    <!-- Slider -->
+  <!-- HERO: Study Abroad -->
+<section class="experience-section">
+  <h2 class="unterstrichene-ueberschrift">
+    Auslandssemester – alles, was du wissen musst
+  </h2>
+  <p>
+    Finde Destinationen, Erfahrungsberichte, Budgets & Visatipps. 
+    Von Studierenden für Studierende.
+  </p>
+</section>
+
+       <!-- Slider -->
     <div class="post-slider">
-      <h1 class="slider-title">Trending Posts</h1>
+      <h1 class="slider-title">Angesagte Beiträge</h1>
       <i class="fas fa-chevron-left prev"></i>
       <i class="fas fa-chevron-right next"></i>
 
@@ -125,7 +136,7 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
               <p class="preview-text">
                 <?= html_entity_decode($preview); ?>
               </p>
-              <a href="single.php?id=<?= (int)($post['id'] ?? 0); ?>" class="btn read-more">Read More</a>
+              <a href="single.php?id=<?= (int)($post['id'] ?? 0); ?>" class="btn read-more">Weiterlesen</a>
             </div>
           </div>
         <?php endforeach; ?>
@@ -134,14 +145,14 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
 
       <div class="sidebar">
         <div class="section search">
-          <h2 class="section-title">Search</h2>
+          <h2 class="section-title">Suchen</h2>
           <form action="index.php" method="post">
-            <input type="text" name="search-term" class="text-input" placeholder="Search...">
+            <input type="text" name="search-term" class="text-input" placeholder="Suchen...">
           </form>
         </div>
 
         <div class="section topics">
-          <h2 class="section-title">Topics</h2>
+          <h2 class="section-title">Themen</h2>
           <ul>
             <?php foreach ($topics as $topic): ?>
               <li>
@@ -164,3 +175,5 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
   <script src="<?= BASE_URL; ?>/public/resources/assets/js/scripts.js?v=5"></script>
 </body>
 </html>
+
+

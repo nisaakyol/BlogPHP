@@ -1,5 +1,5 @@
 /* Layout */
-header { background: #2e2e2e; }
+header { background: #030410; }
 
 .admin-wrapper {
   display: flex;
@@ -8,7 +8,7 @@ header { background: #2e2e2e; }
 
 .admin-wrapper .left-sidebar {
   flex: 2;
-  background: #2e2e2e;
+  background: #bcbcba;
 }
 
 .admin-wrapper .left-sidebar ul {
@@ -138,3 +138,4 @@ header { background: #2e2e2e; }
   outline: none;
   border-color: #c9c9c9;
 }
+

@@ -3,15 +3,15 @@
 ========================================================= */
 * { box-sizing: border-box }
 html, body { height:100%; margin:0; padding:0; background:#f6f6f6; font-family:'Lora',serif }
-h1,h2,h3,h4,h5,h6 { font-family:'Candal',serif; color:#5c5b5b; margin:5px }
+h1,h2,h3,h4,h5,h6 { font-family:'Candal',serif; color:#0a0a0a; margin:5px }
 a { color:inherit; text-decoration:none }
 .clearfix::after { content:''; display:block; clear:both }
 
 /* Buttons & Inputs */
-.btn{ padding:.5rem 1rem; background:#2e2e2e; color:#fff; border:1px solid transparent; border-radius:.25rem; font-size:1.08em }
-.btn:hover{ background:#2e2e2e; color:#fff !important }
+.btn{ padding:.5rem 1rem; background:#030410; color:#fff; border:1px solid transparent; border-radius:.25rem; font-size:1.08em }
+.btn:hover{ background:#030410; color:#fff !important }
 .btn-big{ padding:.7rem 1.3rem; line-height:1.3rem }
-.text-input{ width:100%; padding:.7rem 1rem; border:1px solid #e0e0e0; border-radius:5px; font-size:1.2em; color:#444; outline:0 }
+.text-input{ width:100%; padding:.7rem 1rem; border:1px solid #e0e0e0; border-radius:5px; font-size:1.2em; color:#131212; outline:0 }
 .msg{ width:100%; margin:5px auto; padding:8px; border-radius:5px; list-style:none }
 .success{ color:#3a6e3a; border:1px solid #3a6e3a; background:#bcf5bc }
 .error{ color:#884b4b; border:1px solid #884b4b; background:#f5bcbc }
@@ -19,11 +19,11 @@ a { color:inherit; text-decoration:none }
 /* =========================================================
    Header / Nav
 ========================================================= */
-header{ background:#2e2e2e; height:66px }
+header{ background:#030410; height:66px }
 header *{ color:#fff }
 header .logo{ float:left; height:inherit; margin-left:2em }
 header .logo-text{ margin:9px; font-family:'Candal',serif }
-header .logo-text span{ color:#f00 }
+header .logo-text span{ color:#bdbcbf; }
 header ul{ float:right; margin:0; padding:0; list-style:none }
 header ul li{ float:left; position:relative }
 header ul li a{ display:block; padding:21px; font-size:1.1em }
@@ -32,7 +32,7 @@ header ul li ul{ position:absolute; top:66px; right:0; width:180px; display:none
 header ul li:hover ul{ display:block }
 header ul li ul li a{ padding:10px; background:#fff; color:#444 }
 header ul li ul li a:hover{ background:#d5d6d6 }
-header ul li ul li a.logout{ color:red }
+header ul li ul li a.logout{ color:rgb(23, 22, 22) }
 header .menu-toggle{ display:none }
 
 /* =========================================================
@@ -41,7 +41,7 @@ header .menu-toggle{ display:none }
 .page-wrapper{ min-height:100% }
 .page-wrapper a:hover{ color:#2e2e2e }
 
-.content{ width:90%; margin:30px auto }
+.content{ width:90%; margin:150px auto }
 .content .main-content{ width:70%; float:left }
 .content .sidebar{ width:30%; float:left }
 .content .sidebar.single{ padding:0 10px }
@@ -55,7 +55,7 @@ header .menu-toggle{ display:none }
 .post-slider .slider-title{ text-align:center; margin:30px auto }
 .post-slider .next,.post-slider .prev{
   position:absolute; top:50%; transform:translateY(-50%);
-  font-size:2em; color:#2e2e2e; cursor:pointer;
+  font-size:2em; color:#101010; cursor:pointer;
 }
 .post-slider .next{ right:30px } .post-slider .prev{ left:30px }
 
@@ -78,7 +78,7 @@ header .menu-toggle{ display:none }
    Post-Liste / Karten  (nur Listenansicht!)
 ========================================================= */
 .content .main-content:not(.single) .post{
-  width:95%; height:270px; margin:20px auto; background:#fff;
+  width:95%; height:270px; margin:20px auto; background:#fbf9fc;
   border-radius:5px; position:relative; overflow:hidden;
 }
 .content .main-content:not(.single) .post .post-image{
@@ -92,15 +92,15 @@ header .menu-toggle{ display:none }
 .content .main-content:not(.single) .post .preview-text{ line-height:1.5em; font-size:1.03em; color:#444 }
 .content .main-content:not(.single) .post .read-more{
   position:absolute; bottom:10px; right:10px; border:1px solid #006669;
-  background:transparent; color:#006669 !important;
+  background:transparent; color:#464848 !important;
 }
-.content .main-content:not(.single) .post .read-more:hover{ background:#006669; color:#fff !important; transition:.25s }
+.content .main-content:not(.single) .post .read-more:hover{ background:#07030f; color:#fbf8fb !important; transition:.25s }
 
 /* =========================================================
    Single-Post (Einzelansicht)
 ========================================================= */
-.content .main-content.single{ background:#fff; padding:20px 50px; font-size:1.1em; border-radius:5px }
-.content .main-content.single .post-title{ text-align:center; margin-bottom:40px }
+.content .main-content.single{ background:#fff; padding:40px 100px; font-size:1.1em; border-radius:5px }
+.content .main-content.single .post-title{ text-align:center; margin-bottom:100px }
 
 /* Artikel darf wachsen */
 .content .main-content.single .post{
@@ -114,7 +114,7 @@ header .menu-toggle{ display:none }
 
 /* Hero-Bild */
 .main-content.single .post-hero{ margin:0 0 16px 0; border-radius:6px; overflow:hidden; line-height:0 }
-.main-content.single .post-hero img{ display:block; width:100%; height:140px; object-fit:cover }
+.main-content.single .post-hero img{ display:block; width:100%; height:auto; object-fit:contain }
 
 /* Textblock unter dem Hero */
 .main-content.single .post-content{ overflow:visible; margin-top:12px; line-height:1.6 }
@@ -122,7 +122,7 @@ header .menu-toggle{ display:none }
 
 /* Eingebettete Bilder im Artikel-Body */
 .main-content.single .post-content img{
-  max-height:320px; width:100%; height:auto !important; object-fit:contain;
+  max-height:none; width:100%; height:auto !important; object-fit:contain;
 }
 .main-content.single .post-content *{ max-width:100% }
 
@@ -156,11 +156,11 @@ header .menu-toggle{ display:none }
 /* =========================================================
    Footer
 ========================================================= */
-.footer{ background:#2e2e2e; color:#d3d3d3; height:400px; position:relative }
+.footer{ background: #030410;  color:#d3d3d3; height:400px; position:relative }
 .footer .footer-content{ height:350px; display:flex }
 .footer .footer-content .footer-section{ flex:1; padding:25px }
 .footer .footer-content h1,.footer .footer-content h2{ color:#fff }
-.footer .footer-content .about h1 span{ color:#f00 }
+.footer .footer-content .about h1 span{ color: #030410;  }
 .footer .footer-content .about .contact span{ display:block; font-size:1.1em; margin-bottom:8px }
 .footer .footer-content .about .socials a{
   border:1px solid gray; width:45px; height:41px; padding-top:5px; margin-right:5px;
@@ -180,7 +180,7 @@ header .menu-toggle{ display:none }
 .card{ box-shadow:0 4px 8px rgba(0,0,0,.2) }
 .container{ padding:0 16px }
 .container::after,.row::after{ content:""; display:table; clear:both }
-.title{ color:grey }
+.title{ color:rgb(33, 32, 32) }
 .button{ border:0; outline:0; display:inline-block; padding:8px; color:#fff; background:#000; text-align:center; cursor:pointer; width:100% }
 .button:hover{ background:#555 }
 
@@ -201,13 +201,13 @@ header .menu-toggle{ display:none }
 @media (max-width:770px){
   header{ position:relative }
   header .menu-toggle{ display:block; position:absolute; right:20px; top:20px; font-size:1.9em }
-  header ul{ width:100%; background:#0E94A0; max-height:0; overflow:hidden }
+  header ul{ width:100%; background:#cca8dd; max-height:0; overflow:hidden }
   .showing{ max-height:100em }
   header ul li{ width:100% }
   header ul li ul{ position:static; display:block; width:100% }
-  header ul li ul li a{ padding:10px; background:#0E94A0; color:#fff; padding-left:50px }
-  header ul li ul li a:hover{ background:#006669 }
-  header ul li ul li a.logout{ color:red }
+  header ul li ul li a{ padding:10px; background:#cca8dd; color:#fff; padding-left:50px }
+  header ul li ul li a:hover{ background:#030410; }
+  header ul li ul li a.logout{ color:#030410; }
   header .logo{ margin-left:.5em }
   .main-content-wrapper{ padding:10px }
 }
@@ -225,10 +225,10 @@ header .menu-toggle{ display:none }
 /* =========================================================
    Optional Sections (About/Gallery/etc.)
 ========================================================= */
-.experience-section{ margin-top:30px; padding:30px; background:#4b4b4b; color:#fff; text-align:center }
-.experience-section h2{ font-size:35px; margin-bottom:10px; color:#fff }
+.experience-section{ margin-top:30px; padding:30px; background: linear-gradient(135deg, #8ec5fc, #e0c3fc); color:#000000; text-align:center }
+.experience-section h2{ font-size:35px; margin-bottom:10px; color:#070707; }
 .experience-section p{ font-size:16px }
-.experience-section .red{ color:red }
+.experience-section .red{ color: #030410;  }
 
 .button-container{ display:flex; justify-content:center; gap:10px; margin-top:35px }
 .custom-button{ display:inline-block; padding:20px 70px; text-align:center; color:#333; background:#fff; border:2px solid #333; border-radius:5px; transition:background-color .6s,color .6s }
@@ -259,7 +259,7 @@ header .menu-toggle{ display:none }
 /* Titel als dunkler Balken */
 .main-content.single .post-header .post-title{
   display:block;
-  background:#333;
+  background:#0b0b0b;
   color:#fff !important;
   text-align:center;
   padding:.65rem 1rem;
@@ -306,3 +306,167 @@ header .menu-toggle{ display:none }
 .main-content.single .tts-controls button:disabled{ opacity:.45; cursor:not-allowed; }
 .main-content.single .tts-controls button i,
 .main-content.single .tts-controls button svg{ color:#fff !important; fill:#fff !important; }
+
+/* Global etwas runder machen */
+.content .main-content .post,
+.content .sidebar .section,
+.post-slider .post-wrapper .post,
+.auth-content,
+.footer .footer-content .footer-section {
+  border-radius: 16px;
+}
+
+/* Bilder in Cards auch rund oben */
+.content .main-content .post .post-image {
+  border-top-left-radius: 16px;
+  border-bottom-left-radius: 16px;
+}
+
+/* Buttons runder */
+.btn,
+.custom-button {
+  border-radius: 999px; /* Pills */
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.content .sidebar .section {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.025);
+}
+
+.content .sidebar .section .section-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.content .sidebar .section.topics ul li a {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+header {
+  background: #2e3a46;
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-shadow: 0 10px 35px rgba(0,0,0,.08);
+}
+
+.btn {
+  background: #2c2d2d;   /* teal */
+  border-radius: 999px;
+}
+.btn:hover {
+  background: #030410;
+}
+
+.custom-button {
+  border-radius: 999px;
+  border: 2px solid #030410;
+  color: #292b2b;
+}
+.custom-button:hover {
+  background: #030410;
+  color: #fff;
+}
+
+/* Hintergrund */
+body {
+  background: rgb(210, 185, 215) !important;
+}
+
+/* Thema: Auslandssemester */
+:root {
+  --sa-bg: #fdfefe; 
+  --sa-surface: #fdfbfb; 
+  --sa-primary: #2f2f2d;   
+  --sa-primary-soft: rgba(15,118,110,.1);
+  --sa-accent: #a472c1;    
+  --sa-radius: 16px;
+  --sa-shadow: 0 14px 30px rgba(15,23,42,.05);
+}
+
+body {
+  background: var(--sa-bg);
+}
+
+/* Karten allgemein */
+.content .main-content .post,
+.sidebar .section,
+.post-slider .post-wrapper .post {
+  background: var(--sa-surface);
+  border-radius: var(--sa-radius);
+  box-shadow: var(--sa-shadow);
+  border: 1px solid rgba(15,118,110,.02);
+}
+
+/* Header farblich ans Thema */
+header {
+  background: #030410;  /* dunkles blau*/
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-shadow: 0 10px 40px rgba(15,23,42,.25);
+}
+
+/* Buttons in Travel-Farben */
+.btn,
+.custom-button {
+  background: var(--sa-primary);
+  border: none;
+  color: #f5f2f6 !important;
+  border-radius: 999px;
+}
+.btn:hover,
+.custom-button:hover {
+  background: #030410;
+}
+
+/* --- Buttons grau --- */
+.btn,
+.custom-button {
+  background: rgb(198, 194, 198) !important;
+  color: white !important;
+  border: 1px solid #080808 !important;
+  border-radius: 30px;
+  transition: background-color 0.3s ease;
+}
+
+.btn:hover,
+.custom-button:hover {
+  background: #030410 !important;
+  color: white !important;
+}
+
+/* --- Single-Post: Bilder vollständig zeigen --- */
+
+/* Hero-Bild als <img> */
+.content .main-content.single .post-hero img {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain !important; /* falls Höhe/Breite doch gesetzt wird */
+}
+
+/* Bilder im Artikel */
+.content .main-content.single .post-content img {
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  object-fit: contain !important;
+}
+
+/* Falls irgendwo fixe Höhen am Container hängen: */
+.content .main-content.single .post-hero,
+.content .main-content.single .post-content {
+  height: auto !important;
+  overflow: visible !important;
+}
