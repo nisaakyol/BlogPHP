@@ -39,6 +39,18 @@ $siteKey  = getenv('RECAPTCHA_V2_SITE') ?: '';
     <style>
         .btn[disabled] { opacity: .5; cursor: not-allowed; }
         .recaptcha-box { margin: .75rem 0; }
+
+        /* >>> Sand-Hintergrund nur für diese Seite <<< */
+        body {
+            background: #efe7dd !important; /* sand / beige */
+        }
+
+        /* Formularbox etwas „cardiger“ */
+        .auth-content {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.08);
+        }
     </style>
     <?php if ($siteKey !== ''): ?>
         <!-- reCAPTCHA v2 Script -->
@@ -121,11 +133,11 @@ $siteKey  = getenv('RECAPTCHA_V2_SITE') ?: '';
 
 <?php if ($siteKey !== ''): ?>
 <script>
-// // Callback: reCAPTCHA erfolgreich → Button freigeben
+// Callback: reCAPTCHA erfolgreich → Button freigeben
 function onCaptchaOK_register() {
     document.getElementById('register-submit').disabled = false;
 }
-// // Callback: reCAPTCHA abgelaufen/Fehler → Button sperren
+// Callback: reCAPTCHA abgelaufen/Fehler → Button sperren
 function onCaptchaExpired_register() {
     document.getElementById('register-submit').disabled = true;
 }

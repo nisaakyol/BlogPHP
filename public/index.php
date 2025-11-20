@@ -27,7 +27,6 @@ if (isset($_GET['t_id'])) {
 }
 
 $trending = array_slice($recent, 0, 12); // Top-N für Slider
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -39,6 +38,104 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
   <link rel="stylesheet" href="<?= BASE_URL; ?>/public/resources/assets/css/style.css?v=5">
   <title>Blog</title>
+
+  <style>
+    /* Grund-Hintergrund: Sand */
+    html, body {
+      background: #efe7dd !important; /* Sand-Ton */
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    /* Sand auch für Wrapper */
+    html,
+    body,
+    .page-wrapper,
+    .content,
+    .main-content,
+    .sidebar {
+      background: #efe7dd !important;
+    }
+
+    /* Abstand nach oben kleiner machen (überschreibt style.css) */
+    .content {
+      width: 90%;
+      margin: 40px auto 80px; /* statt 150px */
+    }
+
+    /* Banner im gleichen Stil/Breite wie die Karten */
+    .experience-section {
+      width: 90%;
+      margin: 40px auto 0;  /* Abstand unter dem Header */
+      padding: 40px 55px;
+
+      background: #2e3a46;  /* blau wie Header */
+      color: #efe7dd;
+      text-align: center;
+
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.18);
+    }
+
+    .experience-section h2 {
+      font-size: 36px;
+      margin: 0 0 12px;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .experience-section p {
+      font-size: 17px;
+      margin: 0;
+      opacity: .92;
+    }
+
+    /* Unterstreichung im Banner dezent in weiß */
+    .experience-section .unterstrichene-ueberschrift {
+      position: relative;
+      display: inline-block;
+      padding-bottom: 8px;
+    }
+
+    .experience-section .unterstrichene-ueberschrift::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: rgba(255,255,255,.8);
+    }
+
+    /* Slider optisch auf Sand */
+    .post-slider {
+      background: #efe7dd !important;  /* gleicher Sand-Ton */
+      padding-top: 25px;
+      padding-bottom: 25px;
+    }
+
+    /* Slider-Karten bleiben weiß, leicht abgerundet */
+    .post-slider .post-wrapper .post {
+      background: #ffffff !important;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+    }
+
+    /* Sidebar-Karten */
+    .sidebar .section {
+      background: #ffffff !important;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+      border: 1px solid rgba(0,0,0,.04);
+    }
+
+    /* Posts (Liste) als Cards */
+    .content .main-content:not(.single) .post {
+      background: #ffffff !important;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+    }
+  </style>
 </head>
 <body>
 
@@ -47,18 +144,18 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
 
   <div class="page-wrapper">
 
-  <!-- HERO: Study Abroad -->
-<section class="experience-section">
-  <h2 class="unterstrichene-ueberschrift">
-    Auslandssemester – alles, was du wissen musst
-  </h2>
-  <p>
-    Finde Destinationen, Erfahrungsberichte, Budgets & Visatipps. 
-    Von Studierenden für Studierende.
-  </p>
-</section>
+    <!-- HERO: Study Abroad -->
+    <section class="experience-section">
+      <h2 class="unterstrichene-ueberschrift">
+        Auslandssemester – alles, was du wissen musst
+      </h2>
+      <p>
+        Finde Destinationen, Erfahrungsberichte, Budgets & Visatipps.
+        Von Studierenden für Studierende.
+      </p>
+    </section>
 
-       <!-- Slider -->
+    <!-- Slider -->
     <div class="post-slider">
       <h1 class="slider-title">Angesagte Beiträge</h1>
       <i class="fas fa-chevron-left prev"></i>
@@ -67,11 +164,11 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
       <div class="post-wrapper">
         <?php foreach ($trending as $post): ?>
           <?php
-            $img         = (string)($post['image'] ?? '');
-            $title       = (string)($post['title'] ?? '');
-            $username    = (string)($post['username'] ?? '');
-            $createdAt   = (string)($post['created_at'] ?? '');
-            $createdHuman= $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
+            $img          = (string)($post['image'] ?? '');
+            $title        = (string)($post['title'] ?? '');
+            $username     = (string)($post['username'] ?? '');
+            $createdAt    = (string)($post['created_at'] ?? '');
+            $createdHuman = $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
           ?>
           <div class="post">
             <?php if ($img !== ''): ?>
@@ -100,19 +197,42 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
     <!-- Main -->
     <div class="content clearfix">
 
-      <!-- Posts -->
+      <!-- Sidebar zuerst (links) -->
+      <div class="sidebar">
+        <div class="section search">
+          <h2 class="section-title">Suchen</h2>
+          <form action="index.php" method="post">
+            <input type="text" name="search-term" class="text-input" placeholder="Suchen...">
+          </form>
+        </div>
+
+        <div class="section topics">
+          <h2 class="section-title">Themen</h2>
+          <ul>
+            <?php foreach ($topics as $topic): ?>
+              <li>
+                <a href="<?= BASE_URL . '/public/index.php?t_id='.(int)$topic['id'].'&name='.urlencode((string)$topic['name']); ?>">
+                  <?= htmlspecialchars((string)$topic['name'], ENT_QUOTES, 'UTF-8'); ?>
+                </a>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Posts (rechts) -->
       <div class="main-content">
         <h1 class="recent-post-title"><?= htmlspecialchars((string)$postsTitle, ENT_QUOTES, 'UTF-8'); ?></h1>
 
         <?php foreach ($recent as $post): ?>
           <?php
-            $img         = (string)($post['image'] ?? '');
-            $title       = (string)($post['title'] ?? '');
-            $username    = (string)($post['username'] ?? '');
-            $createdAt   = (string)($post['created_at'] ?? '');
-            $createdHuman= $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
-            $body        = (string)($post['body'] ?? '');
-            $preview     = mb_strlen($body) > 150 ? mb_substr($body, 0, 150) . '...' : $body;
+            $img          = (string)($post['image'] ?? '');
+            $title        = (string)($post['title'] ?? '');
+            $username     = (string)($post['username'] ?? '');
+            $createdAt    = (string)($post['created_at'] ?? '');
+            $createdHuman = $createdAt ? date('F j, Y', strtotime($createdAt)) : '';
+            $body         = (string)($post['body'] ?? '');
+            $preview      = mb_strlen($body) > 150 ? mb_substr($body, 0, 150) . '...' : $body;
           ?>
           <div class="post clearfix">
             <?php if ($img !== ''): ?>
@@ -143,28 +263,6 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
 
       </div>
 
-      <div class="sidebar">
-        <div class="section search">
-          <h2 class="section-title">Suchen</h2>
-          <form action="index.php" method="post">
-            <input type="text" name="search-term" class="text-input" placeholder="Suchen...">
-          </form>
-        </div>
-
-        <div class="section topics">
-          <h2 class="section-title">Themen</h2>
-          <ul>
-            <?php foreach ($topics as $topic): ?>
-              <li>
-                <a href="<?= BASE_URL . '/public/index.php?t_id='.(int)$topic['id'].'&name='.urlencode((string)$topic['name']); ?>">
-                  <?= htmlspecialchars((string)$topic['name'], ENT_QUOTES, 'UTF-8'); ?>
-                </a>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-        </div>
-      </div>
-
     </div>
   </div>
 
@@ -175,5 +273,3 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
   <script src="<?= BASE_URL; ?>/public/resources/assets/js/scripts.js?v=5"></script>
 </body>
 </html>
-
-
