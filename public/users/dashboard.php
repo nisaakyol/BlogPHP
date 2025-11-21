@@ -101,24 +101,113 @@ unset($_SESSION['errors']);
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
   <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/style.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/admin.css">
-  <title>Dein Dashboard</title>
+    <title>Dein Dashboard</title>
   <style>
-    .card { background:#fff; border-radius:12px; box-shadow:0 6px 18px rgba(0,0,0,.07); padding:18px; }
-    .table { width:100%; border-collapse:collapse; }
-    .table th, .table td { padding:.6rem; border-bottom:1px solid #f2f2f2; vertical-align:top; }
-  </style>
+  /* ----------------------------------------------
+     Hintergrund & Grundlayout (Sand-Ton)
+  ---------------------------------------------- */
+  html,
+  body {
+    background: #efe7dd !important; /* Sand */
+    margin: 0;
+    padding: 0;
+  }
+
+  .admin-wrapper {
+    display: flex;
+    min-height: calc(100vh - 66px); /* unterhalb des Headers */
+    background: #efe7dd;
+  }
+
+  .admin-content {
+    flex: 1;
+    padding: 40px 50px;
+    box-sizing: border-box;
+    background: transparent;
+  }
+
+  /* Sidebar-Stil wie im Admin */
+  .admin-sidebar {
+    background: #d1d2d2; /* dezentes Grau */
+  }
+
+  /* ----------------------------------------------
+     Dashboard-Card / Content Box (wie Admin)
+  ---------------------------------------------- */
+  .admin-content .content {
+    max-width: 1100px;
+    margin: 0 auto;
+    background: #ffffff;
+    border-radius: 22px;
+    padding: 28px 32px 32px;
+    box-shadow: 0 18px 45px rgba(0,0,0,.10);
+    border: 1px solid rgba(0,0,0,.03);
+  }
+
+  .page-title {
+    font-size: 2rem;
+    margin: 0 0 1rem;
+    text-align: left;
+  }
+
+  .dashboard-subtitle {
+    margin: 0 0 1.8rem;
+    color: #555;
+    font-size: .98rem;
+  }
+
+  /* Karten für Post-Liste */
+  .card {
+    background:#f9f5f0;
+    border-radius:18px;
+    padding:16px 18px;
+    box-shadow:0 10px 25px rgba(0,0,0,.04);
+    border: 1px solid rgba(0,0,0,.03);
+  }
+
+  .table {
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  .table th, .table td {
+    padding:.6rem;
+    border-bottom:1px solid #f2f2f2;
+    vertical-align:top;
+  }
+
+  @media (max-width: 900px) {
+    .admin-content {
+      padding: 20px 16px 30px;
+    }
+    .admin-content .content {
+      padding: 20px 18px 24px;
+    }
+  }
+</style>
 </head>
 <body>
+  <!-- Globaler Admin-Header: Navigation & Benutzerkontext -->
   <?php include ROOT_PATH . "/public/admin/adminHeader.php"; ?>
 
+  <!-- Gesamt-Layoutcontainer für Dashboard und Account-Bereich -->
   <div class="admin-wrapper">
+    <!-- Linke Admin-Sidebar mit Menüs für Posts & Account -->
     <?php include ROOT_PATH . "/public/admin/adminSidebar.php"; ?>
 
+    <!-- Rechter Inhaltsbereich: Dashboard-Ansicht oder Konto-Einstellungen -->
     <div class="admin-content">
+      <!-- Hauptinhalt des Users-Dashboards (Tabs: Posts oder Account) -->
       <div class="content">
-        <h2 class="page-title">Dein Dashboard</h2>
+        <!-- Nach Tab-Einstellung umschalten: Posts verwalten oder Kontoeinstellungen -->
+        <?php if ($tab === 'posts'): ?>
+  <h2 class="page-title">Dein Dashboard</h2>
+<?php else: ?>
+  <h2 class="page-title">Account Einstellungen</h2>
+<?php endif; ?>
         <?php include ROOT_PATH . "/app/Support/includes/messages.php"; ?>
 
+        <!-- Dashboard-Tab: Übersicht aller eigenen Posts + Aktionen (View/Edit/Delete/Einreichen) -->
         <?php if ($tab === 'posts'): ?>
           <div class="button-group" style="margin-bottom:1rem;">
             <a href="<?= BASE_URL ?>/public/admin/posts/create.php" class="btn btn-big">Neuen Post erstellen</a>
@@ -126,6 +215,7 @@ unset($_SESSION['errors']);
 
           <div class="card">
             <h3>Deine Posts</h3>
+            <!-- Tabelle der eigenen Beiträge mit Status, Notiz und Bearbeitungsoptionen -->
             <table class="table">
                 <thead>
                     <tr>
@@ -144,6 +234,7 @@ unset($_SESSION['errors']);
                     <td><?= $e($p['title'] ?? '') ?></td>
                     <td><?= statusBadge($status) ?></td>
                     <td class="t-cell--note">
+                      <!-- Review-Notiz anzeigen oder Platzhalter, falls leer -->
                         <?php $note = trim((string)($p['review_note'] ?? ''));
                         echo $note !== '' ? nl2br($e($note)) : '<span style="opacity:.6;">—</span>'; ?>
                     </td>
@@ -172,6 +263,7 @@ unset($_SESSION['errors']);
                 </table>
           </div>
 
+          <!-- Konto-Tab: Passwortänderung mit Validierung -->
         <?php else: /* tab === 'account' */ ?>
           <div class="card" style="max-width:560px; margin:0 auto;">
             <h3>Passwort ändern</h3>
@@ -186,6 +278,7 @@ unset($_SESSION['errors']);
               </div>
             <?php endif; ?>
 
+            <!-- Formular zum Ändern des Benutzerpassworts -->
             <form method="post" action="<?= BASE_URL ?>/public/users/dashboard.php?tab=account" autocomplete="off">
               <div class="input-group">
                 <label for="current_password">Aktuelles Passwort</label>

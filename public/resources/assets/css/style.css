@@ -2,8 +2,19 @@
    Base
 ========================================================= */
 * { box-sizing: border-box }
-html, body { height:100%; margin:0; padding:0; background:#f6f6f6; font-family:'Lora',serif }
-h1,h2,h3,h4,h5,h6 { font-family:'Candal',serif; color:#0a0a0a; margin:5px }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #efe7dd !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', sans-serif !important;
+  font-weight: 600;
+  color: #030410;
+}
 a { color:inherit; text-decoration:none }
 .clearfix::after { content:''; display:block; clear:both }
 
@@ -354,11 +365,11 @@ header .menu-toggle{ display:none }
 }
 
 body {
-  font-family: 'Poppins', sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: 'Poppins', sans-serif;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
   font-weight: 600;
 }
 
@@ -454,20 +465,26 @@ header {
   background: #030410;
 }
 
-/* --- Buttons grau --- */
+/* --- Buttons im Admin-/User-Stil (wie Dashboard) --- */
 .btn,
 .custom-button {
-  background: rgb(198, 194, 198) !important;
-  color: white !important;
-  border: 1px solid #080808 !important;
-  border-radius: 30px;
-  transition: background-color 0.3s ease;
+  background: #2e3a46 !important;        /* dunkles Grau-Blau wie im Header */
+  color: #efe7dd !important;             /* helles Beige */
+  border: 1px solid transparent !important;
+  border-radius: 999px !important;       /* Pillenform */
+  padding: 0.55rem 1.2rem;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
 
 .btn:hover,
 .custom-button:hover {
-  background: #030410 !important;
-  color: white !important;
+  background: #1f2831 !important;
+  color: #efe7dd !important;
 }
 
 /* --- Single-Post: Bilder vollständig zeigen --- */
@@ -495,3 +512,8 @@ header {
   height: auto !important;
   overflow: visible !important;
 }
+
+
+
+
+

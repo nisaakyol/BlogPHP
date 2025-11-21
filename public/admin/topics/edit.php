@@ -43,6 +43,113 @@ $topics = $vm['topics'] ?? [];
   <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/admin.css">
 
   <title>Admin – Edit Topic</title>
+  <style>
+    /* Hintergrund & Grundlayout wie Manage Topics */
+    html,
+    body {
+      background: #efe7dd !important; /* Sand */
+      margin: 0;
+      padding: 0;
+    }
+
+    .admin-wrapper {
+      display: flex;
+      min-height: calc(100vh - 66px);
+      background: #efe7dd;
+    }
+
+    .admin-content {
+      flex: 1;
+      padding: 32px 40px 60px;
+      box-sizing: border-box;
+    }
+
+    .admin-content .content {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 22px;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.08);
+      padding: 26px 36px 36px;
+    }
+
+    .page-title {
+      margin: 0 0 18px;
+      font-size: 1.8rem;
+      text-align: center;
+      color: #111827;
+    }
+
+    /* Button-Gruppe oben – wie bei Manage Topics */
+    .button-group {
+      max-width: 1100px;
+      margin: 0 auto 16px;
+      display: flex;
+      gap: 12px;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    .button-group .btn.btn-big {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.5rem 1.3rem;
+      border-radius: 999px;
+      font-size: 0.95rem;
+      background: #d2cddc;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      color: #151515 !important;
+      text-decoration: none;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18);
+    }
+
+    .button-group .btn.btn-big:hover {
+      background: #030410;
+      color: #ffffff !important;
+    }
+
+    /* Formular-Styling */
+    form > div {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .text-input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.7rem 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+      font-size: 1rem;
+    }
+
+    textarea {
+      min-height: 200px;
+      resize: vertical;
+    }
+
+    @media (max-width: 900px) {
+      .admin-content {
+        padding: 20px 16px 30px;
+      }
+      .admin-content .content {
+        padding: 20px 18px 24px;
+      }
+      .button-group {
+        justify-content: center;
+      }
+      .page-title {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
 </head>
 <body>
 

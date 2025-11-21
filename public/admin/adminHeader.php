@@ -1,12 +1,16 @@
 <header role="banner" class="admin-header">
 
+<!-- Logo / Link zur Startseite -->
   <a class="logo" href="<?php echo BASE_URL . '/public/index.php'; ?>" aria-label="Startseite">
     <h1 class="logo-text">Startseite</h1>
   </a>
 
+  <!-- Navigation ein-/ausklappen (Mobile-Menü) -->
   <i class="fa fa-bars menu-toggle" aria-hidden="true"></i>
 
+  <!-- Rechtsseitige Benutzer-Navigation (Profil, Logout) -->
   <ul class="nav admin-nav" role="navigation" aria-label="Admin Navigation">
+    <!-- Dropdown für eingeloggte Benutzer -->
     <?php if (isset($_SESSION['id'])): ?>
       <li class="nav-user">
         <a href="#" aria-haspopup="true" aria-expanded="false">
@@ -15,6 +19,7 @@
           <i class="fa fa-chevron-down" style="font-size:.8em;" aria-hidden="true"></i>
         </a>
 
+        <!-- Benutzer-Menü (z. B. Logout) -->
         <ul class="dropdown admin-dropdown" role="menu">
           <li>
             <a href="<?php echo BASE_URL . '/public/logout.php'; ?>" class="logout" role="menuitem">

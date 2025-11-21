@@ -44,7 +44,7 @@ $admin_users = $vm['admin_users'] ?? [];
     body {
       margin: 0;
       background: #efe7dd !important;
-      font-family: 'Lora', serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
     }
 
     /* ===== Card Layout wie bei Posts & Topics ===== */
@@ -154,6 +154,49 @@ $admin_users = $vm['admin_users'] ?? [];
       gap: 6px;
       white-space: nowrap;
     }
+
+        /* ==== Action-Chips wie bei Manage Topics ==== */
+    .btn-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0.28rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, transform 0.05s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-chip i {
+      font-size: 0.8rem;
+    }
+
+    .btn-chip--edit {
+      background: #e5e7eb;
+      color: #111827;
+    }
+
+    .btn-chip--edit:hover {
+      background: #d1d5db;
+    }
+
+    .btn-chip--delete {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .btn-chip--delete:hover {
+      background: #fecaca;
+    }
+
+    .btn-chip:active {
+      transform: translateY(1px);
+    }
+
   </style>
 
 </head>
@@ -182,7 +225,9 @@ $admin_users = $vm['admin_users'] ?? [];
 
       <?php include ROOT_PATH . "/app/Support/includes/messages.php"; ?>
 
+      <!-- Tabelle mit allen Admin-Usern -->
       <table>
+        <!-- Tabellenkopf: Spalten für Benutzerübersicht -->
         <thead>
           <tr>
             <th>SN</th>
@@ -193,31 +238,37 @@ $admin_users = $vm['admin_users'] ?? [];
         </thead>
         <tbody>
 
+        <!-- Fallback: Keine Benutzer gefunden -->
         <?php if (empty($admin_users)): ?>
           <tr><td colspan="4">Keine Benutzer vorhanden.</td></tr>
         <?php endif; ?>
 
+        <!-- Alle Benutzer auflisten (Nummer, Name, Email, Aktionen -->
         <?php foreach ($admin_users as $i => $u): ?>
           <?php
+          // Daten des aktuellen Benutzers vorbereiten
             $id = (int)$u['id'];
             $name = htmlspecialchars($u['username'], ENT_QUOTES, 'UTF-8');
             $email = htmlspecialchars($u['email'], ENT_QUOTES, 'UTF-8');
           ?>
+          <!-- Einzelne Benutzerzeile -->
           <tr>
             <td><?= $i + 1 ?></td>
             <td><?= $name ?></td>
             <td><?= $email ?></td>
+            <!-- Aktionen für diesen Benutzer: Bearbeiten oder Löschen -->
             <td class="table-actions" colspan="2">
-              <a href="edit.php?id=<?= $id ?>" class="btn btn--sm btn--success">
-                <i class="fas fa-pen"></i> Edit
-              </a>
-
-              <a href="index.php?delete_id=<?= $id ?>"
-                 onclick="return confirm('User wirklich löschen?');"
-                 class="btn btn--sm btn--danger">
-                <i class="fas fa-trash"></i> Delete
-              </a>
-            </td>
+              <!-- Benutzer bearbeiten -->
+  <a href="edit.php?id=<?= $id ?>" class="btn-chip btn-chip--edit">
+    Edit
+  </a>
+<!-- Benutzer löschen (mit Bestätigung) -->
+  <a href="index.php?delete_id=<?= $id ?>"
+     onclick="return confirm('User wirklich löschen?');"
+     class="btn-chip btn-chip--delete">
+    Delete
+  </a>
+</td>
           </tr>
         <?php endforeach; ?>
 
@@ -228,6 +279,7 @@ $admin_users = $vm['admin_users'] ?? [];
   </div>
 </div>
 
+<!-- Admin-JavaScript laden (Tabellen- und UI-Funktionen) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="<?= BASE_URL ?>/public/resources/assets/js/scripts.js"></script>
 

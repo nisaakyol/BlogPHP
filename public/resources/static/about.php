@@ -19,49 +19,86 @@ require ROOT_PATH . '/app/bootstrap.php';
 
   <link rel="stylesheet" href="../assets/css/style.css" />
 
-  <style>
-    body {
-      background: #f3ede3 !important;
+    <style>
+    /* gleicher Sand-Hintergrund wie auf der Startseite */
+    html,
+    body,
+    .page-wrapper {
+      background: #efe7dd !important;
+      margin: 0;
+      padding: 0;
     }
 
-    .about-wrapper {
-      max-width: 900px;
-      margin: 0 auto;            /* kein Abstand oben */
-      padding-top: 40px;         /* leichter Atmer */
+    .page-wrapper {
+      padding-top: 40px; /* Abstand unter dem Header */
+    }
+
+    /* Hero-Bereich oben */
+    .about-hero {
+      width: 90%;
+      margin: 0 auto 35px;
+      padding: 32px 40px;
+
+      background: #2e3a46;
+      color: #efe7dd;
+      border-radius: 22px;
+      box-shadow: 0 18px 45px rgba(0,0,0,.18);
+      text-align: left;
+    }
+
+    .about-hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      letter-spacing: .4px;
+      color: #ffffff;
+    }
+
+    .about-hero p {
+      margin: 0;
+      font-size: 16px;
+      opacity: .92;
+    }
+
+    /* Karten-Bereich */
+    .about-content {
+      width: 90%;
+      margin: 0 auto 80px;
     }
 
     .about-card {
       background: #ffffff;
-      padding: 40px 50px;
-      border-radius: 26px;
-      box-shadow: 0 18px 40px rgba(0,0,0,.15);
+      padding: 32px 40px;
+      border-radius: 22px;
+      box-shadow: 0 12px 30px rgba(0,0,0,.10);
     }
 
-    /* Titel-Balken */
-    .about-title-bar {
-      background: #2e3a46;           /* dein neues dunkles Travel-Blau */
-      padding: 18px;
-      border-radius: 18px;
-      text-align: center;
-      margin-bottom: 35px;
-      color: #fff;
-      font-size: 28px;
-      font-weight: 600;
-      letter-spacing: .5px;
+    .about-card h2 {
+      margin-top: 0;
+      margin-bottom: 18px;
+      font-size: 24px;
+      color: #2e3a46;
     }
 
-    /* Textgestaltung */
     .about-card p,
     .about-card ul {
-      font-size: 17px;
-      line-height: 1.6;
+      font-size: 16px;
+      line-height: 1.7;
       color: #222;
     }
 
     .about-card ul {
-      margin: 15px 0 25px 30px;
+      margin: 12px 0 22px 24px;
     }
 
+    @media (max-width: 900px) {
+      .about-hero,
+      .about-content,
+      .about-card {
+        width: 100%;
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+    }
   </style>
 
   <title>About Us</title>
@@ -73,12 +110,19 @@ require ROOT_PATH . '/app/bootstrap.php';
 
 <div class="page-wrapper">
 
-  <div class="about-wrapper">
-    <div class="about-card">
+  <!-- Hero oben -->
+  <section class="about-hero">
+    <h1>Travel-Blog für dein Auslandssemester</h1>
+    <p>
+      Ehrliche Einblicke, Erfahrungsberichte und Tipps rund um das Leben und Studieren im Ausland – 
+      von Studierenden für Studierende.
+    </p>
+  </section>
 
-      <div class="about-title-bar">
-        Travel-Blog
-      </div>
+  <!-- Inhalt als Karte -->
+  <section class="about-content">
+    <div class="about-card">
+      <h2>Worum geht es hier?</h2>
 
       <p>
         Auf diesem Blog findet ihr viele Eindrücke, Erfahrungen und Informationen rund um das Thema Auslandssemester.
@@ -100,8 +144,8 @@ require ROOT_PATH . '/app/bootstrap.php';
 
       <p>
         Hier könnt ihr nachlesen, wie das Leben in diesen Ländern aussieht, wie das Studium dort abläuft und was
-        den Alltag als internationale Studierende prägt. Zu jedem Land gibt es vier Artikel, die euch einen guten
-        Überblick geben. Es geht um das Leben vor Ort, den Campusalltag, spannende Reiseziele und viele praktische Tipps.
+        den Alltag als internationale Studierende prägt. Zu jedem Land gibt es mehrere Artikel, die euch einen guten
+        Überblick geben – über Campusalltag, Reiseziele und praktische Tipps.
       </p>
 
       <p>
@@ -109,9 +153,8 @@ require ROOT_PATH . '/app/bootstrap.php';
         Vielleicht plant ihr selbst ein Auslandssemester oder wollt einfach erfahren, wie das Leben in anderen
         Ländern wirklich aussieht. Hier findet ihr ehrliche Eindrücke, hilfreiche Informationen und kleine Geschichten.
       </p>
-
-    </div> <!-- about-card -->
-  </div> <!-- about-wrapper -->
+    </div>
+  </section>
 
 </div>
 

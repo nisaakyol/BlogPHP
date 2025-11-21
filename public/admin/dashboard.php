@@ -173,19 +173,26 @@ if ($repo) {
 <body>
   <?php include ROOT_PATH . "/public/admin/adminHeader.php"; ?>
 
+  <!-- Gesamtes Admin-Layout: Sidebar links & Dashboard-Inhalt rechts -->
   <div class="admin-wrapper">
+    <!-- Linke Navigationsleiste für Admin-Bereich -->
     <?php include ROOT_PATH . "/public/admin/adminSidebar.php"; ?>
 
+    <!-- Hauptbereich des Dashboards -->
     <div class="admin-content">
+      <!-- Dashboard-Inhaltsbox: Titel, Hinweise und Statistik-Karten -->
       <div class="content">
         <h2 class="page-title">Dashboard</h2>
         <p class="dashboard-subtitle">
           Überblick über deine Admin-Sektion. Hier kannst du Posts, Topics und Nutzer verwalten.
         </p>
 
+        <!-- Systemmeldungen (Erfolg, Fehler, Hinweise) -->
         <?php include ROOT_PATH . '/app/Support/includes/messages.php'; ?>
 
+        <!-- Statistikdaten aus dem ViewModel: Posts, Topics, Nutzer -->
         <?php if (!empty($vm)): ?>
+          <!-- Übersichtskarten mit den wichtigsten Admin-Kennzahlen -->
           <div class="dashboard-grid">
             <?php if (isset($vm['posts_count'])): ?>
               <div class="dashboard-card">
@@ -211,7 +218,7 @@ if ($repo) {
               </div>
             <?php endif; ?>
           </div>
-
+<!-- Debug-Bereich: rohe Daten aus dem ViewModel -->
           <div class="dashboard-debug">
             <strong>Rohdaten (vm):</strong>
             <pre><?php print_r($vm); ?></pre>
@@ -221,6 +228,7 @@ if ($repo) {
     </div>
   </div>
 
+  <!-- Admin-Skripte & Editor-Initialisierung -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="https://cdn.ckeditor.com/ckeditor5/12.2.0/classic/ckeditor.js"></script>
   <script src="<?= BASE_URL ?>/public/resources/assets/js/scripts.js"></script>

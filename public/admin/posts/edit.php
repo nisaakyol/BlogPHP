@@ -28,6 +28,7 @@ $currentImg  = (string)($vm['image'] ?? ''); // wichtig für Hidden-Feld & Vorsc
 
 $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 ?>
+<!-- Kopfbereich der Seite: Grundlayout, Admin-CSS und Hintergrund-Overrides -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -35,10 +36,29 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
   <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/style.css">
   <link rel="stylesheet" href="<?= BASE_URL ?>/public/resources/assets/css/admin.css">
   <title>Admin Section – Edit Post</title>
+  <style>
+/* Admin-Wrapper Hintergrund überschreiben */
+.admin-wrapper,
+.admin-content,
+body {
+    background: #efe7dd !important;   /* deine gewünschte Farbe */
+}
+
+/* Box selbst weiß */
+.content {
+    background: #ffffff !important;
+    border-radius: 24px;
+    padding: 24px 32px 32px;
+    box-shadow: 0 18px 45px rgba(0,0,0,0.08);
+}
+</style>
+
+<!-- Kopfbereich der Admin-Edit-Ansicht: Standard-CSS + Override für Hintergrund/Content-Box -->
 </head>
 <body>
   <?php include ROOT_PATH . "/public/admin/adminHeader.php"; ?>
 
+  <!-- Haupt-Layoutcontainer des Admin-Bereichs -->
   <div class="admin-wrapper">
     <?php include ROOT_PATH . "/public/admin/adminSidebar.php"; ?>
 
@@ -48,11 +68,13 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
         <a href="index.php"  class="btn btn-big">Manage Posts</a>
       </div>
 
+      <!-- Weißer Content-Container für das Edit-Formular -->
       <div class="content">
         <h2 class="page-title">Edit Posts</h2>
 
         <?php include ROOT_PATH . "/app/Support/helpers/formErrors.php"; ?>
 
+        <!-- Versteckte Felder: Post-ID & altes Bild für Vergleich und Update-Logik -->
         <form action="edit.php" method="post" enctype="multipart/form-data">
           <input type="hidden" name="id" value="<?= (int)$id ?>">
           <input type="hidden" name="current_image" value="<?= $e($currentImg) ?>">
@@ -77,6 +99,7 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             ><?= $e($body) ?></textarea>
           </div>
 
+          <!-- Bild-Upload: neues Bild optional; wenn leer, bleibt das aktuelle Bild erhalten -->
           <div>
             <label for="image">Image (leer lassen = altes Bild behalten)</label>
             <input type="file" id="image" name="image" class="text-input" accept="image/*">
@@ -92,6 +115,7 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
             <?php endif; ?>
           </div>
 
+          <!-- Bild-Metadaten bearbeiten: ALT-Text (Pflicht) & sichtbare Bildunterschrift -->
           <div class="form-group">
             <label for="image_alt">Bildbeschreibung (ALT-Text) *</label>
             <input id="image_alt" name="image_alt" type="text"
@@ -106,6 +130,7 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 
           <div>
             <label for="topic_id">Topic</label>
+            <!-- Auswahl der Kategorie, zu der der Beitrag gehört -->
             <select id="topic_id" name="topic_id" class="text-input">
               <option value=""></option>
               <?php foreach ($topics as $topic): ?>
@@ -121,6 +146,7 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
           </div>
 
           <div>
+            <!-- Unterschiedliche Veröffentlichung: Admin = direkt, User = Freigabeanfrage -->
             <?php if (!empty($_SESSION['admin'])): ?>
               <label>
                 <input type="checkbox" name="published" <?= $published ? 'checked' : '' ?>>
@@ -133,7 +159,7 @@ $e = static fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
               </label>
             <?php endif; ?>
           </div>
-
+<!-- Änderungen speichern und Beitrag aktualisieren -->
           <div>
             <button type="submit" name="update-post" class="btn btn-big">Update Post</button>
           </div>

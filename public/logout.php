@@ -1,4 +1,5 @@
 <?php
+// Grund-Setup laden: Pfade, Bootstrap, Repository und Auth-Controller
 require __DIR__ . '/path.php';
 require_once ROOT_PATH . '/app/Support/includes/bootstrap.php'; 
 require_once ROOT_PATH . '/app/Infrastructure/Repositories/DBRepository.php';
@@ -7,6 +8,7 @@ require_once ROOT_PATH . '/app/Http/Controllers/AuthController.php';
 use App\Http\Controllers\AuthController; // Logout ausführen
 use App\Infrastructure\Repositories\DbRepository;  // Repo für DB-Zugriff
 
+// Benutzer ausloggen – regulär über den AuthController, bei Fehler per Fallback
 try {
     (new AuthController(new DbRepository()))->logout(); // Controller-Logout
 } catch (\Throwable $e) {

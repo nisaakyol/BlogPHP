@@ -53,45 +53,58 @@ foreach ($posts as $post):
     <span class="badge" style="<?= $badge[1] ?>"><?= $badge[0] ?></span>
   </td>
 
-  <td class="col-actions">
+    <td class="col-actions">
     <div class="actions">
-      <a href="<?= $viewUrl ?>" class="btn btn--sm">
+
+      <!-- VIEW -->
+      <a href="<?= $viewUrl ?>" class="btn-chip btn-chip--view">
         <i class="fas fa-eye"></i> View
       </a>
 
+      <!-- EDIT + DELETE nur für eigene Posts -->
       <?php if ($isOwn): ?>
-        <a href="<?= BASE_URL ?>/public/admin/posts/edit.php?id=<?= $postId ?>" class="btn btn--sm btn--success">
+        <a href="<?= BASE_URL ?>/public/admin/posts/edit.php?id=<?= $postId ?>" class="btn-chip btn-chip--edit">
           <i class="fas fa-pen"></i> Edit
         </a>
 
         <!-- Delete via POST + CSRF -->
-        <form action="<?= BASE_URL ?>/public/admin/posts/postActions.php" method="post" style="display:inline">
+        <form action="<?= BASE_URL ?>/public/admin/posts/postActions.php"
+              method="post"
+              style="display:inline">
           <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
           <input type="hidden" name="action" value="delete">
           <input type="hidden" name="post_id" value="<?= $postId ?>">
-          <button type="submit" class="btn btn--sm btn--danger" data-confirm="Post wirklich löschen?">
+          <button type="submit"
+                  class="btn-chip btn-chip--delete"
+                  data-confirm="Post wirklich löschen?">
             <i class="fas fa-trash"></i> Delete
           </button>
         </form>
       <?php endif; ?>
 
+      <!-- Benutzer kann den Beitrag zur Prüfung einreichen (nur normale User, kein Admin) -->
       <?php if ($canSubmit): ?>
-        <!-- Submit via POST + CSRF -->
-        <form action="<?= BASE_URL ?>/public/admin/posts/postActions.php" method="post" style="display:inline">
+        <form action="<?= BASE_URL ?>/public/admin/posts/postActions.php"
+              method="post"
+              style="display:inline">
           <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
           <input type="hidden" name="action" value="submit">
           <input type="hidden" name="post_id" value="<?= $postId ?>">
-          <button type="submit" class="btn btn--sm" data-confirm="Beitrag zur Prüfung einreichen?">
+          <button type="submit"
+                  class="btn btn--sm"
+                  data-confirm="Beitrag zur Prüfung einreichen?">
             <i class="fas fa-paper-plane"></i> Submit
           </button>
         </form>
       <?php endif; ?>
+
     </div>
   </td>
-
+  <!-- Admin-Bereich: Fremde Beiträge moderieren (Approve/Reject) -->
   <?php if ($isAdmin && !$isOwn): ?>
     <td class="col-note">
       <div class="actions">
+        <!-- Admin-Option: Beitrag freigeben, wenn er noch nicht genehmigt wurde -->
         <?php if ($status !== 'approved'): ?>
           <form action="<?= BASE_URL ?>/public/admin/posts/moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
             <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">
@@ -104,6 +117,7 @@ foreach ($posts as $post):
           </form>
         <?php endif; ?>
 
+        <!-- Admin-Option: Beitrag ablehnen, solange er noch nicht abgelehnt ist -->
         <?php if ($status !== 'rejected'): ?>
           <form action="<?= BASE_URL ?>/public/admin/posts/moderate.php" method="post" style="display:inline-flex; gap:.35rem; align-items:center;">
             <input type="hidden" name="csrf_token" value="<?= csrf_token(); ?>">

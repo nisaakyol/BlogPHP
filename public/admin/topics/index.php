@@ -207,13 +207,18 @@ $topics = $vm['topics'] ?? [];
   </style>
 </head>
 <body>
+  <!-- Globaler Admin-Header (Navigation & Benutzerinfos) -->
   <?php include ROOT_PATH . "/public/admin/adminHeader.php"; ?>
 
+  <!-- Hauptlayout-Container für die Adminseite -->
   <div class="admin-wrapper">
+    <!-- Linke Sidebar mit allen Admin-Menüpunkten -->
     <?php include ROOT_PATH . "/public/admin/adminSidebar.php"; ?>
 
+    <!-- Rechter Inhaltsbereich der Topic-Übersicht -->
     <div class="admin-content">
 
+    <!-- Aktionen: neues Topic erstellen oder vorhandene verwalten -->
       <div class="button-group">
         <a href="create.php" class="btn btn--lg btn--primary">
           <i class="fas fa-plus"></i> Add Topic
@@ -223,12 +228,16 @@ $topics = $vm['topics'] ?? [];
         </a>
       </div>
 
+      <!-- Hauptbereich mit Topic-Tabelle und Statusmeldungen -->
       <div class="content">
         <h2 class="page-title">Manage Topics</h2>
 
+        <!-- Systemmeldungen (Erfolg, Fehler, Hinweise) anzeigen -->
         <?php include ROOT_PATH . "/app/Support/includes/messages.php"; ?>
 
+        <!-- Tabelle mit allen vorhandenen Topics -->
         <table class="topics-table">
+          <!-- Tabellenkopf mit Spaltenüberschriften -->
           <thead>
             <tr>
               <th>SN</th>
@@ -237,12 +246,14 @@ $topics = $vm['topics'] ?? [];
             </tr>
           </thead>
           <tbody>
+            <!-- Falls keine Topics existieren: Hinweiszeile anzeigen -->
             <?php if (empty($topics)): ?>
               <tr>
                 <td class="empty" colspan="3">Keine Topics vorhanden.</td>
               </tr>
             <?php else: ?>
               <?php $sn = 1; ?>
+              <!-- Alle Topics einzeln rendern (Name + Aktionen) -->
               <?php foreach ($topics as $topic): ?>
                 <?php
                   $topicId   = (int)($topic['id'] ?? 0);
@@ -251,6 +262,7 @@ $topics = $vm['topics'] ?? [];
                 <tr>
                   <td><?= $sn++ ?></td>
                   <td><?= htmlspecialchars($topicName, ENT_QUOTES, 'UTF-8') ?></td>
+                  <!-- Aktionen für jedes Topic: Bearbeiten oder Löschen -->
                   <td class="table-actions">
                     <a href="edit.php?id=<?= $topicId ?>" class="btn-chip btn-chip--edit">
                       <i class="fas fa-pen"></i> Edit
@@ -270,6 +282,7 @@ $topics = $vm['topics'] ?? [];
     </div>
   </div>
 
+  <!-- Admin-JavaScript: Tabellenfunktionen, UI-Logik -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <script src="<?= BASE_URL ?>/public/resources/assets/js/scripts.js"></script>
 </body>

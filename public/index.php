@@ -135,6 +135,45 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,.06);
     }
+
+    /************************************************************
+ * Fix: Weißer Balken zwischen Header und Hero-Section
+ ************************************************************/
+
+/* GLOBALER SAND-HINTERGRUND */
+html,
+body {
+  background: #efe7dd !important;
+  margin: 0;
+  padding: 0;
+}
+
+/* WRAPPER gibt jetzt den Abstand, nicht das Hero-Element */
+.page-wrapper {
+  background: #efe7dd !important;
+  padding-top: 40px; /* Abstand unter Header */
+  margin: 0 !important;
+}
+
+/* HERO-SECTION: KEIN MARGIN NACH OBEN → verhindert „Hochrutschen“ */
+.experience-section {
+  width: 90% !important;
+  margin: 0 auto 0 !important;      /* Kein Abstand nach oben */
+  padding: 40px 55px !important;
+
+  background: #2e3a46 !important;
+  color: #efe7dd !important;
+  text-align: center;
+
+  border-radius: 22px !important;
+  box-shadow: 0 18px 45px rgba(0,0,0,.18) !important;
+}
+
+/* Inhalt etwas enger setzen, aber ohne oberen Abstand */
+.content {
+  width: 90% !important;
+  margin: 40px auto 80px !important;  /* kein Top-Margin von 150px */
+}
   </style>
 </head>
 <body>
@@ -234,7 +273,9 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
             $body         = (string)($post['body'] ?? '');
             $preview      = mb_strlen($body) > 150 ? mb_substr($body, 0, 150) . '...' : $body;
           ?>
+          <!-- Einzelner Post-Eintrag in der Übersicht (Bild + Titel + Vorschau) -->
           <div class="post clearfix">
+            <!-- Beitragsbild anzeigen, falls vorhanden -->
             <?php if ($img !== ''): ?>
               <img
                 src="<?= BASE_URL . '/public/resources/assets/images/' . htmlspecialchars($img, ENT_QUOTES, 'UTF-8') ?>"
@@ -242,20 +283,25 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
                 class="post-image">
             <?php endif; ?>
 
+            <!-- Textvorschau des Beitrags: Titel, Autor, Datum, Textauszug -->
             <div class="post-preview">
+              <!-- Beitrags-Titel verlinkt zur vollständigen Einzelansicht -->
               <h2>
                 <a href="single.php?id=<?= (int)($post['id'] ?? 0); ?>">
                   <?= htmlspecialchars($title, ENT_QUOTES, 'UTF-8'); ?>
                 </a>
               </h2>
+              <!-- Metadaten des Posts: Autor und Erstellungsdatum -->
               <i class="far fa-user"> <?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></i>
               &nbsp;
               <?php if ($createdHuman !== ''): ?>
                 <i class="far fa-calendar"> <?= htmlspecialchars($createdHuman, ENT_QUOTES, 'UTF-8'); ?></i>
               <?php endif; ?>
+              <!-- Kurzvorschau / Auszug des Beitragsinhalts -->
               <p class="preview-text">
                 <?= html_entity_decode($preview); ?>
               </p>
+              <!-- Link zur vollständigen Beitragsansicht -->
               <a href="single.php?id=<?= (int)($post['id'] ?? 0); ?>" class="btn read-more">Weiterlesen</a>
             </div>
           </div>
@@ -273,3 +319,4 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
   <script src="<?= BASE_URL; ?>/public/resources/assets/js/scripts.js?v=5"></script>
 </body>
 </html>
+

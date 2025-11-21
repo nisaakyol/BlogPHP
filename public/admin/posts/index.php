@@ -102,7 +102,7 @@ $usersById = $vm['usersById'] ?? [];
       font-size: 0.95rem;
       background: #d2cddc;
       border: 1px solid rgba(0,0,0,0.1);
-      color: #151515 !important;
+      color: #f3f2f2ff !important;
       text-decoration: none;
     }
 
@@ -277,6 +277,54 @@ $usersById = $vm['usersById'] ?? [];
       color: #4b5563;
     }
 
+        /* ==== Chip-Buttons wie bei Manage Topics / Users ==== */
+    .btn-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 0.28rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.83rem;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.15s ease, transform 0.05s ease;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-chip i {
+      font-size: 0.8rem;
+    }
+
+    /* VIEW – neutral grau */
+    .btn-chip--view {
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .btn-chip--view:hover {
+      background:#d1d5db;
+    }
+
+    /* EDIT – hellgrau */
+    .btn-chip--edit {
+      background:#e5e7eb;
+      color:#111827;
+    }
+    .btn-chip--edit:hover {
+      background:#d1d5db;
+    }
+
+    /* DELETE – rot */
+    .btn-chip--delete {
+      background:#fee2e2;
+      color:#b91c1c;
+    }
+    .btn-chip--delete:hover {
+      background:#fecaca;
+    }
+
     @media (max-width: 900px) {
       .admin-content {
         padding: 16px 10px 30px;
@@ -294,8 +342,10 @@ $usersById = $vm['usersById'] ?? [];
   </style>
 </head>
 <body>
+  <!-- Globaler Admin-Header (Navigation, Benutzerinformationen) -->
   <?php include ROOT_PATH . "/public/admin/adminHeader.php"; ?>
 
+  <!-- Haupt-Container für das Admin-Layout -->
   <div class="admin-wrapper">
     <?php include ROOT_PATH . "/public/admin/adminSidebar.php"; ?>
 
@@ -312,6 +362,7 @@ $usersById = $vm['usersById'] ?? [];
 
         <h2 class="page-title">Manage Posts</h2>
 
+        <!-- Systemmeldungen anzeigen (Erfolg, Fehler, Hinweise) -->
         <?php include ROOT_PATH . "/app/Support/includes/messages.php"; ?>
 
         <table class="table">

@@ -153,6 +153,56 @@ header {
 .button-group .btn{
   margin: 0;
 }
+/* =========================
+   CHIP-BUTTONS (View/Edit/Delete)
+   – wie in Manage Topics / Users
+========================= */
+
+.btn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0.28rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.05s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.btn-chip i {
+  font-size: 0.8rem;
+}
+
+/* VIEW – neutral grau */
+.btn-chip--view {
+  background: #e5e7eb;
+  color: #111827;
+}
+.btn-chip--view:hover {
+  background: #d1d5db;
+}
+
+/* EDIT – hellgrau wie Topics */
+.btn-chip--edit {
+  background: #e5e7eb;
+  color: #111827;
+}
+.btn-chip--edit:hover {
+  background: #d1d5db;
+}
+
+/* DELETE – rot wie Topics */
+.btn-chip--delete {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.btn-chip--delete:hover {
+  background: #fecaca;
+}
 
 /* =========================
    TABELLE (.table)

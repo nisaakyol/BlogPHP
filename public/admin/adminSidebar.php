@@ -83,8 +83,10 @@ $active = function (string $needle) use ($currentPath): string {
   }
 </style>
 
+<!-- Linke Seitenleiste für Admin- und User-Navigation -->
 <div class="left-sidebar">
   <ul class="sidebar-nav">
+    <!-- Admin-Menü: Dashboard, Posts, Topics und Benutzerverwaltung -->
     <?php if ($isAdmin): ?>
       <li class="sidebar-section-title">Admin</li>
 
@@ -120,6 +122,7 @@ $active = function (string $needle) use ($currentPath): string {
         </a>
       </li>
 
+      <!-- User-Menü: eigene Posts und Kontoeinstellungen -->
     <?php else: ?>
       <li class="sidebar-section-title">User</li>
 

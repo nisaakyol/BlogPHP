@@ -189,16 +189,20 @@ $imgCap = trim((string)($post['image_caption'] ?? ''));
 </head>
 <body>
 
+<!-- Post-Vorschau-Layout für Titel, Bild und Inhalt -->
 <div class="wrap">
+    <!-- Kopfbereich der Vorschau: Titel & Status-Badge -->
     <header>
         <strong>Vorschau</strong>
         <span class="badge"><?= $e(strtoupper($status)) ?></span>
     </header>
 
+    <!-- Hauptinhalt der Vorschau: Titel, Meta, Bild und Artikel -->
     <main>
         <h1><?= $title ?></h1>
         <div class="meta">Autor: <?= $authorName ?></div>
 
+        <!-- Beitragsbild mit optionaler Bildunterschrift -->
         <?php if ($imgUrl): ?>
             <figure class="hero">
                 <img src="<?= $e($imgUrl) ?>" alt="<?= $e($imgAlt) ?>">
@@ -208,6 +212,7 @@ $imgCap = trim((string)($post['image_caption'] ?? ''));
             </figure>
         <?php endif; ?>
 
+        <!-- Gerenderter Beitragstext (HTML) -->
         <article class="content">
             <?= $body ?>
         </article>
