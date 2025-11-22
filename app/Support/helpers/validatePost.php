@@ -30,7 +30,7 @@ function validatePost(array $data, ?array $files = null, bool $requireImageOnCre
     }
 
     // Bild nur beim Erstellen erzwingen (falls konfiguriert)
-    $isCreate = isset($data['add-post']);                 // Flag aus Create-Form
+    $isCreate = isset($data['add-post']); // Flag aus Create-Form
     if ($requireImageOnCreate && $isCreate) {
         $img = $files['image'] ?? null;
         if (!$img || empty($img['name'])) {
@@ -38,18 +38,21 @@ function validatePost(array $data, ?array $files = null, bool $requireImageOnCre
         }
     }
 
-    $hasNewImage = !empty($files['image']['name']);
-    $hasImageRef = !empty($post['current_image'] ?? '');
+    // Bild + ALT/CAP
+    $hasNewImage = !empty($files['image']['name'] ?? '');
+    $hasImageRef = !empty($data['current_image'] ?? '');
 
-    $alt = trim((string)($post['image_alt'] ?? ''));
-    $cap = trim((string)($post['image_caption'] ?? ''));
+    $alt = trim((string)($data['image_alt'] ?? ''));
+    $cap = trim((string)($data['image_caption'] ?? ''));
 
     if (($hasNewImage || $hasImageRef) && $alt === '') {
         $errors[] = 'Bitte eine Bildbeschreibung (ALT-Text) angeben.';
     }
+
     if ($alt !== '' && mb_strlen($alt) > 200) {
         $errors[] = 'Die Bildbeschreibung (ALT) darf max. 200 Zeichen haben.';
     }
+
     if ($cap !== '' && mb_strlen($cap) > 300) {
         $errors[] = 'Die Bildunterschrift darf max. 300 Zeichen haben.';
     }
