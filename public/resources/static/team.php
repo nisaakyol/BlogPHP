@@ -120,7 +120,7 @@ require ROOT_PATH . '/app/bootstrap.php';
         <!-- Raster mit allen Teamkarten (Foto + Name + Rolle) -->
         <div class="team-grid">
           <article class="team-card">
-            <img src="<?php echo BASE_URL . '/public/resources/assets/images/Profilbild.png'; ?>" alt="Profilbild Emily">
+            <img src="<?php echo BASE_URL . '/public/resources/assets/images/EmilyProfilbild.png'; ?>" alt="Profilbild Emily">
             <div class="container">
               <h2>Emily</h2>
               <p class="title">Teammitglied</p>
@@ -128,7 +128,7 @@ require ROOT_PATH . '/app/bootstrap.php';
           </article>
 
           <article class="team-card">
-            <img src="<?php echo BASE_URL . '/public/resources/assets/images/NisaProfilbild.jpeg'; ?>" alt="Profilbild Nisa">
+            <img src="<?php echo BASE_URL . '/public/resources/assets/images/NisaProfilbild.png'; ?>" alt="Profilbild Nisa">
             <div class="container">
               <h2>Nisa</h2>
               <p class="title">Teammitglied</p>
@@ -136,7 +136,7 @@ require ROOT_PATH . '/app/bootstrap.php';
           </article>
 
           <article class="team-card">
-            <img src="<?php echo BASE_URL . '/public/resources/assets/images/Profilbild.png'; ?>" alt="Profilbild Antonia">
+            <img src="<?php echo BASE_URL . '/public/resources/assets/images/AntoniaProfilbild.png'; ?>" alt="Profilbild Antonia">
             <div class="container">
               <h2>Antonia</h2>
               <p class="title">Teammitglied</p>
@@ -144,7 +144,7 @@ require ROOT_PATH . '/app/bootstrap.php';
           </article>
 
           <article class="team-card">
-            <img src="<?php echo BASE_URL . '/public/resources/assets/images/Profilbild.png'; ?>" alt="Profilbild Lavina">
+            <img src="<?php echo BASE_URL . '/public/resources/assets/images/LaviniaProfilbild.png'; ?>" alt="Profilbild Lavina">
             <div class="container">
               <h2>Lavinia</h2>
               <p class="title">Teammitglied</p>
