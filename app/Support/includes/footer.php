@@ -60,24 +60,25 @@
     margin-bottom: 12px;
   }
 
-  /* --- runder SEND Button + mehr Abstand nach unten --- */
   .footer .contact-btn {
     background: #ffffff;
     color: #2e3a46;
     border: none;
-    border-radius: 999px;     /* Rund */
-    padding: 12px 28px;
+    border-radius: 999px;
+
+    padding: 2px 10px;
+    font-size: 0.65rem;
+    gap: 3px;
+
     cursor: pointer;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    position: relative;
-    top: -10px;
-    /* WICHTIG: Button höher im Viewport wirken lassen */
-    margin-bottom: 40px !important;   /* genug Platz nach unten */
-  }
 
+    position: relative;
+    top: -12px;             /* <<< HEBT ihn unter das Textfeld */
+    margin-bottom: 5px !important;   /* <<< weniger Abstand unten */
+}
   .footer .contact-btn:hover {
     background: #dce1e6;
   }
@@ -100,6 +101,8 @@
     }
   }
 </style>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <footer class="footer" role="contentinfo">
   <div class="footer-content">
