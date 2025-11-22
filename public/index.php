@@ -34,7 +34,13 @@ $trending = array_slice($recent, 0, 12); // Top-N für Slider
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" crossorigin="anonymous">
+  <!-- Font Awesome für alle Icons (auch Footer) -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+        integrity="sha512-dymI6FTxD1XNte3I0n+Yzu3/n6PvJEa3TBUnIFJQGryuVKyXjH9MuNoMylk13Nha2c+hJ+OzY1/6V2vNhbbX6Q=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer">
+
   <link href="https://fonts.googleapis.com/css?family=Candal|Lora" rel="stylesheet">
   <link rel="stylesheet" href="<?= BASE_URL; ?>/public/resources/assets/css/style.css?v=5">
   <title>Blog</title>
